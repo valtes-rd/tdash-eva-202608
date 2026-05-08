@@ -29,14 +29,14 @@
         <label>チェックイン</label>
         <div class="date-input-wrap">
           <input type="text" id="s-checkin" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
-          <div class="dp-btn-wrap">📅<input type="date" id="s-checkin-dp" tabindex="-1" onchange="syncFromPicker('s-checkin')"></div>
+          <div class="dp-btn-wrap" onclick="openDatePicker('s-checkin')">📅<input type="date" id="s-checkin-dp" tabindex="-1" onchange="syncFromPicker('s-checkin')"></div>
         </div>
       </div>
       <div class="field">
         <label>チェックアウト</label>
         <div class="date-input-wrap">
           <input type="text" id="s-checkout" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
-          <div class="dp-btn-wrap">📅<input type="date" id="s-checkout-dp" tabindex="-1" onchange="syncFromPicker('s-checkout')"></div>
+          <div class="dp-btn-wrap" onclick="openDatePicker('s-checkout')">📅<input type="date" id="s-checkout-dp" tabindex="-1" onchange="syncFromPicker('s-checkout')"></div>
         </div>
       </div>
       <div class="field" style="max-width:100px">

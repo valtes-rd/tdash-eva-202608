@@ -67,6 +67,13 @@ function autoFormatDate(input) {
   }
 }
 
+// カレンダーピッカーを開く（showPicker API）
+function openDatePicker(id) {
+  const el = document.getElementById(id + '-dp');
+  if (!el) return;
+  try { el.showPicker(); } catch(e) {}
+}
+
 // カレンダーピッカーの選択をテキスト入力に反映
 function syncFromPicker(id) {
   const val = document.getElementById(id + "-dp")?.value; // yyyy-mm-dd

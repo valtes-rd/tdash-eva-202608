@@ -51,7 +51,7 @@
         // 空き状況行
         html += "<tr>" + week.map(d => {
           if (d.available) {
-            return `<td class="avail-ok clickable" onclick="goBook('${d.date}')" title="${d.date} でチェックイン →日程選択へ">空あり<br><span style="font-size:10px;opacity:.7">▶予約</span></td>`;
+            return `<td class="avail-ok clickable" onclick="goBook('${d.date}')" title="${d.date} でチェックイン →日程選択へ">空あり</td>`;
           } else {
             return `<td class="avail-ng">満　室</td>`;
           }
@@ -65,6 +65,11 @@
       </div>`;
 
       wrap.innerHTML = html;
+
+      setTimeout(() => {
+        const h = document.getElementById("avail-wrap").offsetHeight + 16;
+        window.parent.postMessage({ type: "availFrameHeight", height: h }, "*");
+      }, 80);
     });
 
     function goBook(date) {

@@ -14,7 +14,11 @@
 
   <div class="page-wrap" style="margin-top:80px;max-width:960px">
     <div class="breadcrumb">
-      <a href="search.html">← 検索結果に戻る</a>
+      <a href="search.html">検索結果</a>
+      <span class="sep">›</span>
+      <a id="hotel-detail-link" href="#">ホテル詳細</a>
+      <span class="sep">›</span>
+      <span>日程・空き確認</span>
     </div>
 
     <div id="hotel-info-banner" class="alert alert-info" style="margin-bottom:20px"></div>
@@ -30,7 +34,7 @@
           <div class="date-input-wrap">
             <input type="text" id="ds-checkin" placeholder="yyyy/mm/dd" maxlength="10"
               oninput="autoFormatDate(this);validateCheckin()">
-            <div class="dp-btn-wrap">📅
+            <div class="dp-btn-wrap" onclick="openDatePicker('ds-checkin')">📅
               <input type="date" id="ds-checkin-dp" tabindex="-1"
                 onchange="syncFromPicker('ds-checkin');validateCheckin()">
             </div>
@@ -43,7 +47,7 @@
           <div class="date-input-wrap">
             <input type="text" id="ds-checkout" placeholder="yyyy/mm/dd" maxlength="10"
               oninput="autoFormatDate(this);validateDates()">
-            <div class="dp-btn-wrap">📅
+            <div class="dp-btn-wrap" onclick="openDatePicker('ds-checkout')">📅
               <input type="date" id="ds-checkout-dp" tabindex="-1"
                 onchange="syncFromPicker('ds-checkout');validateDates()">
             </div>
@@ -111,6 +115,7 @@
 
       document.getElementById("hotel-info-banner").innerHTML =
         `🏨 <strong>${currentHotel.name}</strong> &nbsp;📍 ${App.regionName(currentHotel.region)} &nbsp; ${App.starsHtml(currentHotel.stars)}`;
+      document.getElementById("hotel-detail-link").href = `hotel.html?id=${currentHotel.id}`;
 
       const sp = App.loadSearchParams();
 
@@ -124,6 +129,11 @@
         document.getElementById("ds-checkout-dp").value = sp.checkout;
       }
       document.getElementById("ds-guests").value = sp.guests || "2";
+
+      // 日程が既に指定されている場合は自動で空き確認を実行
+      if (sp.checkin && sp.checkout) {
+        setTimeout(() => checkAvailability(false), 100);
+      }
     });
 
     function validateCheckin() {
@@ -155,20 +165,18 @@
       else coG.classList.remove("has-error");
     }
 
-    function checkAvailability() {
+    function checkAvailability(withLoading = true) {
       const ci = App.parseDateStr(document.getElementById("ds-checkin").value);
       const co = App.parseDateStr(document.getElementById("ds-checkout").value);
       const g  = +document.getElementById("ds-guests").value;
       const r  = +document.getElementById("ds-rooms").value;
 
-      if (!ci || !co) { App.showToast("日程を入力してください", "error"); return; }
+      if (!ci || !co) { if (withLoading) App.showToast("日程を入力してください", "error"); return; }
       const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
-      if (new Date(ci + "T00:00:00") < tomorrow) { App.showToast("チェックインは翌日以降のみ指定できます", "error"); return; }
-      if (co <= ci) { App.showToast("チェックアウトはチェックイン翌日以降です", "error"); return; }
+      if (new Date(ci + "T00:00:00") < tomorrow) { if (withLoading) App.showToast("チェックインは翌日以降のみ指定できます", "error"); return; }
+      if (co <= ci) { if (withLoading) App.showToast("チェックアウトはチェックイン翌日以降です", "error"); return; }
 
-      App.showLoading("空きを確認中...");
-      setTimeout(() => {
-        App.hideLoading();
+      const doRender = () => {
         nightsCount = App.calcNights(ci, co);
         const avail = App.checkAvailability(currentHotel.id, ci, co);
 
@@ -178,7 +186,6 @@
 
         const DOW_JP = ["日","月","火","水","木","金","土"];
 
-        // 満室日がある場合はその理由を表示
         const blockedHtml = avail.blockedDays.length > 0
           ? `<div class="alert alert-warn" style="margin-bottom:12px;font-size:13px">
                ⚠️ 以下の日程が満室のため、この期間は予約できません。<br>
@@ -233,7 +240,14 @@
         sp.checkin = ci; sp.checkout = co;
         sp.guests = g;   sp.rooms = r;
         App.saveSearchParams(sp);
-      }, 3000 + Math.random() * 2000);
+      };
+
+      if (withLoading) {
+        App.showLoading("空きを確認中...");
+        setTimeout(() => { App.hideLoading(); doRender(); }, 3000 + Math.random() * 2000);
+      } else {
+        doRender();
+      }
     }
 
     function selectRoom(type, price, total, ci, co, g, r) {

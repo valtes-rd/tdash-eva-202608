@@ -27,6 +27,13 @@
       currentHotel = App.getHotelById(hotelId);
       if (!currentHotel) { document.getElementById("hotel-detail-wrap").innerHTML = "<p>ホテルが見つかりません。</p>"; return; }
 
+      window.addEventListener("message", (e) => {
+        if (e.data?.type === "availFrameHeight") {
+          const iframe = document.querySelector('iframe[title="空き状況カレンダー"]');
+          if (iframe) iframe.style.height = (e.data.height + 4) + "px";
+        }
+      });
+
       renderDetail();
     });
 
