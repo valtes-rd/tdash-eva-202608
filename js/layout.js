@@ -64,4 +64,6 @@ function buildPage({ title, body, scripts = [], activePage = "" }) {
   document.title = title ? `${title} | TravelNest Demo` : "TravelNest Demo";
   document.body.insertAdjacentHTML("afterbegin", buildDisclaimer() + buildHeader(activePage));
   document.body.insertAdjacentHTML("beforeend", buildFooter());
+  // buildPageはApp.init()のrenderHeader()より後に実行されるためここで再描画する
+  if (typeof App !== "undefined") App.renderHeader();
 }

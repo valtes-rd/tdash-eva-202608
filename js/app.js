@@ -21,8 +21,8 @@ const App = (() => {
 
   // ── 初期化 ─────────────────────────────────────────────────
   function init() {
-    // ユーザーセッション復元
-    const u = sessionStorage.getItem(LS.USER);
+    // ユーザーセッション復元（localStorageでウィンドウ間共有）
+    const u = localStorage.getItem(LS.USER);
     if (u) { try { _state.currentUser = JSON.parse(u); } catch(e) {} }
 
     // 予約データ初期化
@@ -47,14 +47,14 @@ const App = (() => {
     const user = USERS.find(u => u.email === email && u.password === password);
     if (!user) return { ok: false, msg: "メールアドレスまたはパスワードが正しくありません。" };
     _state.currentUser = user;
-    sessionStorage.setItem(LS.USER, JSON.stringify(user));
+    localStorage.setItem(LS.USER, JSON.stringify(user));
     renderHeader();
     return { ok: true, user };
   }
 
   function logout() {
     _state.currentUser = null;
-    sessionStorage.removeItem(LS.USER);
+    localStorage.removeItem(LS.USER);
     renderHeader();
     window.location.href = "index.html";
   }
@@ -346,13 +346,13 @@ const App = (() => {
   // 地域名取得
   function regionName(id) { const r = REGIONS.find(r => r.id === id); return r ? r.name : id; }
 
-  // 検索パラメータ保存/取得
+  // 検索パラメータ保存/取得（localStorageでウィンドウ間共有）
   function saveSearchParams(p) {
     _state.searchParams = p;
-    sessionStorage.setItem("tn_search", JSON.stringify(p));
+    localStorage.setItem("tn_search", JSON.stringify(p));
   }
   function loadSearchParams() {
-    const s = sessionStorage.getItem("tn_search");
+    const s = localStorage.getItem("tn_search");
     if (s) { try { _state.searchParams = JSON.parse(s); } catch(e) {} }
     return _state.searchParams;
   }
