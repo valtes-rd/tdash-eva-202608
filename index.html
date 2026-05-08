@@ -27,11 +27,17 @@
       </div>
       <div class="field">
         <label>チェックイン</label>
-        <input type="text" id="s-checkin" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+        <div class="date-input-wrap">
+          <input type="text" id="s-checkin" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+          <div class="dp-btn-wrap">📅<input type="date" id="s-checkin-dp" tabindex="-1" onchange="syncFromPicker('s-checkin')"></div>
+        </div>
       </div>
       <div class="field">
         <label>チェックアウト</label>
-        <input type="text" id="s-checkout" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+        <div class="date-input-wrap">
+          <input type="text" id="s-checkout" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+          <div class="dp-btn-wrap">📅<input type="date" id="s-checkout-dp" tabindex="-1" onchange="syncFromPicker('s-checkout')"></div>
+        </div>
       </div>
       <div class="field" style="max-width:100px">
         <label>人数</label>
@@ -84,12 +90,7 @@
     });
 
     function initDateDefaults() {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dayAfter = new Date(tomorrow);
-      dayAfter.setDate(dayAfter.getDate() + 2);
-      document.getElementById("s-checkin").value = App.fmtDate(tomorrow).replace(/-/g, "/");
-      document.getElementById("s-checkout").value = App.fmtDate(dayAfter).replace(/-/g, "/");
+      // デフォルトは未設定。日程はdate-select.htmlで選択
     }
 
     function buildRegionOptions() {
@@ -175,19 +176,16 @@
 
     function bookHotel(hotelId) {
       if (!App.requireLogin()) return;
+      const ci = App.parseDateStr(document.getElementById("s-checkin")?.value || "");
+      const co = App.parseDateStr(document.getElementById("s-checkout")?.value || "");
+      const guests = document.getElementById("s-guests").value;
       const sp = App.loadSearchParams();
       sp.hotelId = hotelId;
+      sp.guests  = guests;
+      if (ci) sp.checkin  = ci;
+      if (co) sp.checkout = co;
       App.saveSearchParams(sp);
-      // 日程チェック
-      const ci = document.getElementById("s-checkin")?.value;
-      const co = document.getElementById("s-checkout")?.value;
-      if (ci && co) {
-        sp.checkin = ci; sp.checkout = co;
-        App.saveSearchParams(sp);
-        window.location.href = "booking.html";
-      } else {
-        window.location.href = `date-select.html?hotelId=${hotelId}`;
-      }
+      window.location.href = `date-select.html?hotelId=${hotelId}`;
     }
 
     function doSearch() {

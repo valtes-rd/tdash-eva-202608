@@ -23,13 +23,19 @@
           <label>エリア</label>
           <select id="f-region"><option value="all">すべてのエリア</option></select>
         </div>
-        <div class="form-group" style="min-width:140px">
+        <div class="form-group" style="min-width:160px">
           <label>チェックイン</label>
-          <input type="text" id="f-checkin" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+          <div class="date-input-wrap">
+            <input type="text" id="f-checkin" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+            <div class="dp-btn-wrap">📅<input type="date" id="f-checkin-dp" tabindex="-1" onchange="syncFromPicker('f-checkin')"></div>
+          </div>
         </div>
-        <div class="form-group" style="min-width:140px">
+        <div class="form-group" style="min-width:160px">
           <label>チェックアウト</label>
-          <input type="text" id="f-checkout" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+          <div class="date-input-wrap">
+            <input type="text" id="f-checkout" placeholder="yyyy/mm/dd" maxlength="10" oninput="autoFormatDate(this)">
+            <div class="dp-btn-wrap">📅<input type="date" id="f-checkout-dp" tabindex="-1" onchange="syncFromPicker('f-checkout')"></div>
+          </div>
         </div>
         <div class="form-group" style="max-width:90px">
           <label>人数</label>
@@ -343,12 +349,7 @@
       const sp = App.loadSearchParams();
       sp.hotelId = hotelId;
       App.saveSearchParams(sp);
-      const hasDate = sp.checkin && sp.checkout;
-      if (hasDate) {
-        window.location.href = "booking.html";
-      } else {
-        window.location.href = `date-select.html?hotelId=${hotelId}`;
-      }
+      window.location.href = `date-select.html?hotelId=${hotelId}`;
     }
   </script>
 </body>

@@ -24,6 +24,7 @@ function buildHeader(activePage = "") {
       <button onclick="headerSearch()" title="検索">🔍</button>
     </div>
     <nav class="header-nav" style="display:flex;align-items:center;gap:4px;">
+      <a href="index.html" class="header-nav">ホーム</a>
       <a href="${helpLink}" class="header-nav">ヘルプ</a>
       <span id="header-nav-dynamic" style="display:flex;align-items:center;gap:4px;"></span>
     </nav>
@@ -59,6 +60,19 @@ function autoFormatDate(input) {
   if (digits.length > 6) v = digits.slice(0,4) + "/" + digits.slice(4,6) + "/" + digits.slice(6);
   else if (digits.length > 4) v = digits.slice(0,4) + "/" + digits.slice(4);
   input.value = v;
+  // 8桁揃ったら対応するカレンダーピッカーにも同期
+  if (digits.length === 8) {
+    const picker = document.getElementById(input.id + "-dp");
+    if (picker) picker.value = digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6);
+  }
+}
+
+// カレンダーピッカーの選択をテキスト入力に反映
+function syncFromPicker(id) {
+  const val = document.getElementById(id + "-dp")?.value; // yyyy-mm-dd
+  if (val) {
+    document.getElementById(id).value = val.replace(/-/g, "/");
+  }
 }
 
 function headerSearch() {
