@@ -181,51 +181,62 @@ const App = (() => {
 
   // ── 空き確認 ──────────────────────────────────────────────
 
-  // hotelId + date で決定論的な 0〜1 値を生成（同じ引数は常に同じ結果）
+  // hotel ID + 日付文字列で決定論的な 0〜1 値を生成（同一引数は常に同一結果）
   function _deterministicRng(str) {
     let h = 5381;
     for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
     return (h >>> 0) / 0xffffffff;
   }
 
-  // soldOutDays を安全にパース
+  // soldOutDays を安全にパース（master.js の JSON 文字列形式に対応）
   function _parseSoldOutDays(hotel) {
     if (!hotel.soldOutDays) return [];
     try { return JSON.parse(hotel.soldOutDays.toString().replace(/'/g, '"')); } catch(e) { return []; }
   }
 
+  // ── チェックイン〜チェックアウト全泊をスキャンして満室日を返す ──
+  function _blockedNights(soldOutDays, checkin, checkout) {
+    const blocked = [];
+    if (!checkin) return blocked;
+    const ci = new Date(checkin  + "T00:00:00");
+    const co = checkout ? new Date(checkout + "T00:00:00") : new Date(ci.getTime() + 86400000);
+    for (let d = new Date(ci); d < co; d.setDate(d.getDate() + 1)) {
+      if (soldOutDays.includes(d.getDay())) blocked.push(fmtDate(new Date(d)));
+    }
+    return blocked;
+  }
+
   function checkAvailability(hotelId, checkin, checkout) {
     const hotel = HOTELS.find(h => h.id === hotelId);
-    if (!hotel) return { available: false, rooms: [] };
+    if (!hotel) return { available: false, days: [], rooms: [], blockedDays: [] };
 
     const soldOutDays = _parseSoldOutDays(hotel);
 
-    // 先2週間のグリッド（soldOutDays 基準で決定論的）
+    // ── 先2週間グリッド（soldOutDays と同じロジック） ──
     const days = [];
     const today = new Date(); today.setHours(0,0,0,0);
     for (let i = 0; i < 14; i++) {
-      const d = new Date(today); d.setDate(today.getDate()+i);
+      const d = new Date(today); d.setDate(today.getDate() + i);
       const dow = d.getDay();
       days.push({ date: fmtDate(d), dow, available: !soldOutDays.includes(dow) });
     }
 
-    // チェックイン日が満室曜日かどうか（先2週間グリッドと整合）
-    let ciSoldOut = false;
-    if (checkin) {
-      const ciDow = new Date(checkin + "T00:00:00").getDay();
-      ciSoldOut = soldOutDays.includes(ciDow);
-    }
+    // ── チェックイン〜アウト全泊チェック（グリッドと同一ロジック） ──
+    const blockedDays = _blockedNights(soldOutDays, checkin, checkout);
+    const rangeAvailable = blockedDays.length === 0;
 
-    // 部屋ごとの空き：hotel+checkin でシードした決定論的値を使用
+    // ── 部屋ごとの空き（ROOM_TYPES を参照、決定論的ハッシュ） ──
+    // 同じ hotel+checkin の組み合わせは常に同じ結果を返す
     const rng = _deterministicRng(hotelId + (checkin || ""));
-    const rooms = [
-      { type: "スタンダードシングル", price: hotel.priceBase,                   available: !ciSoldOut },
-      { type: "スタンダードダブル",   price: Math.round(hotel.priceBase * 1.3), available: !ciSoldOut },
-      { type: "デラックスツイン",     price: Math.round(hotel.priceBase * 1.6), available: !ciSoldOut && rng > 0.25 },
-      { type: "プレミアムスイート",   price: Math.round(hotel.priceBase * 2.5), available: !ciSoldOut && rng > 0.50 },
-    ];
+    const rooms = ROOM_TYPES.map((rt, i) => ({
+      type:      rt.name,
+      price:     Math.round(hotel.priceBase * rt.multiplier),
+      // シングル/ダブルは在庫豊富なので満室日でなければ必ず空き
+      // デラックス/スイートは決定論的ハッシュで埋まり具合を表現
+      available: rangeAvailable && (i < 2 ? true : rng > (i === 2 ? 0.25 : 0.50)),
+    }));
 
-    return { available: !ciSoldOut, days, rooms };
+    return { available: rangeAvailable, days, rooms, blockedDays };
   }
 
   // ── ヘッダー描画 ──────────────────────────────────────────

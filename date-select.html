@@ -176,11 +176,24 @@
         const result = document.getElementById("avail-result");
         result.classList.remove("hidden");
 
+        const DOW_JP = ["日","月","火","水","木","金","土"];
+
+        // 満室日がある場合はその理由を表示
+        const blockedHtml = avail.blockedDays.length > 0
+          ? `<div class="alert alert-warn" style="margin-bottom:12px;font-size:13px">
+               ⚠️ 以下の日程が満室のため、この期間は予約できません。<br>
+               ${avail.blockedDays.map(d => {
+                 const dt = new Date(d + "T00:00:00");
+                 return `<strong>${dt.getMonth()+1}月${dt.getDate()}日（${DOW_JP[dt.getDay()]}）</strong>`;
+               }).join("、")}
+             </div>`
+          : `<div class="alert alert-success" style="margin-bottom:12px;font-size:13px">
+               ✅ ${App.fmtDateJP(ci)} → ${App.fmtDateJP(co)}<br>
+               ${nightsCount}泊 / 大人${g}名
+             </div>`;
+
         result.innerHTML = `
-          <div class="alert alert-success" style="margin-bottom:12px;font-size:13px">
-            ✅ ${App.fmtDateJP(ci)} → ${App.fmtDateJP(co)}<br>
-            ${nightsCount}泊 / 大人${g}名
-          </div>
+          ${blockedHtml}
           <div style="overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:13px">
               <thead>

@@ -41,12 +41,22 @@ const REGIONS = [
   { id: "philippines", name: "フィリピン", emoji: "🏝️", lat: 14.5995, lng: 120.9842 },
 ];
 
+// ── 客室タイプ定義（全ホテル共通） ─────────────────────────
+// key: 内部キー / name: 表示名 / multiplier: priceBase に対する倍率 / totalRooms: 総室数
+const ROOM_TYPES = [
+  { key: "single", name: "スタンダードシングル", multiplier: 1.00, totalRooms: 20 },
+  { key: "double", name: "スタンダードダブル",   multiplier: 1.30, totalRooms: 30 },
+  { key: "deluxe", name: "デラックスツイン",     multiplier: 1.60, totalRooms: 10 },
+  { key: "suite",  name: "プレミアムスイート",   multiplier: 2.50, totalRooms:  5 },
+];
+
 // ── ホテルデータ生成ヘルパー ───────────────────────────────
 function hotel(id, region, name, stars, priceBase, facilities, desc, soldOutDays = []) {
   return { id, region, name, stars, priceBase, facilities, desc, soldOutDays };
 }
 
 // soldOutDays: 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+// バルテスシリーズは特定曜日を全室満室として設定
 
 const HOTELS = [
 
