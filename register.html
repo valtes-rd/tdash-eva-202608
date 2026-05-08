@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>会員登録 | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px;max-width:520px">
+    <div style="text-align:center;margin-bottom:28px">
+      <a href="index.html" style="font-size:24px;font-weight:700;color:var(--primary);text-decoration:none">✈ TravelNest</a>
+      <div style="font-size:13px;color:var(--gray);margin-top:4px">新規会員登録</div>
+    </div>
+
+    <!-- ステップ表示 -->
+    <div style="display:flex;gap:0;margin-bottom:24px">
+      <div style="flex:1;padding:10px;text-align:center;background:var(--primary);color:white;font-size:13px;font-weight:600;border-radius:6px 0 0 6px">① 情報入力</div>
+      <div style="flex:1;padding:10px;text-align:center;background:var(--gray-lt);color:var(--gray);font-size:13px">② 確認メール</div>
+      <div style="flex:1;padding:10px;text-align:center;background:var(--gray-lt);color:var(--gray);font-size:13px;border-radius:0 6px 6px 0">③ 完了</div>
+    </div>
+
+    <div class="alert alert-warn" style="margin-bottom:20px;font-size:13px">
+      ⚠️ <strong>デモサイトのため</strong>実際にアカウントは作成されません。<br>
+      テスト体験には<a href="help.html#accounts">テストアカウント</a>をお使いください。
+    </div>
+
+    <div class="form-section">
+      <h2 style="font-size:18px;color:var(--accent);margin-bottom:20px">会員情報を入力してください</h2>
+
+      <div id="reg-err" class="alert alert-danger hidden" style="margin-bottom:16px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" id="g-sei"><label>姓 *</label><input type="text" id="r-sei" placeholder="山田"><span class="error-msg">必須項目です</span></div>
+        <div class="form-group" id="g-mei"><label>名 *</label><input type="text" id="r-mei" placeholder="太郎"><span class="error-msg">必須項目です</span></div>
+      </div>
+      <div class="form-group mt-16" id="g-email"><label>メールアドレス *</label><input type="email" id="r-email" placeholder="user@example.com"><span class="error-msg">正しいメールアドレスを入力してください</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="form-group" id="g-pw1"><label>パスワード * <span style="font-size:11px;color:var(--gray)">（8文字以上）</span></label><input type="password" id="r-pw1" placeholder="●●●●●●●●"><span class="error-msg">8文字以上の英数字を入力してください</span></div>
+        <div class="form-group" id="g-pw2"><label>パスワード（確認）*</label><input type="password" id="r-pw2" placeholder="●●●●●●●●"><span class="error-msg">パスワードが一致しません</span></div>
+      </div>
+      <div class="form-group mt-16" id="g-phone"><label>電話番号 *</label><input type="tel" id="r-phone" placeholder="090-XXXX-XXXX"><span class="error-msg">必須項目です</span></div>
+      <div class="form-group mt-16" id="g-birth"><label>生年月日 *</label><input type="date" id="r-birth"><span class="error-msg">18歳以上のみ登録できます</span></div>
+
+      <div style="margin-top:20px;padding:12px;background:var(--gray-lt);border-radius:6px;font-size:13px">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
+          <input type="checkbox" id="r-agree" style="margin-top:2px;flex-shrink:0">
+          <span><a href="help.html">利用規約</a>および<a href="help.html">プライバシーポリシー</a>に同意する *</span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;font-size:15px;padding:12px;margin-top:20px" onclick="doRegister()">
+        会員登録する
+      </button>
+
+      <p style="text-align:center;font-size:13px;color:var(--gray);margin-top:16px">
+        すでにアカウントをお持ちの方は <a href="login.html">ログイン</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "会員登録" });
+      if (App.isLoggedIn()) window.location.href = "mypage.html";
+    });
+
+    function doRegister() {
+      const sei   = document.getElementById("r-sei").value.trim();
+      const mei   = document.getElementById("r-mei").value.trim();
+      const email = document.getElementById("r-email").value.trim();
+      const pw1   = document.getElementById("r-pw1").value;
+      const pw2   = document.getElementById("r-pw2").value;
+      const phone = document.getElementById("r-phone").value.trim();
+      const birth = document.getElementById("r-birth").value;
+      const agree = document.getElementById("r-agree").checked;
+
+      let valid = true;
+      [["g-sei",sei],["g-mei",mei],["g-phone",phone]].forEach(([id,v]) => {
+        const g = document.getElementById(id);
+        if (!v) { g.classList.add("has-error"); valid = false; }
+        else g.classList.remove("has-error");
+      });
+      const emailG = document.getElementById("g-email");
+      if (!email || !email.includes("@")) { emailG.classList.add("has-error"); valid = false; }
+      else emailG.classList.remove("has-error");
+
+      const pw1G = document.getElementById("g-pw1");
+      if (pw1.length < 8) { pw1G.classList.add("has-error"); valid = false; }
+      else pw1G.classList.remove("has-error");
+      const pw2G = document.getElementById("g-pw2");
+      if (pw1 !== pw2) { pw2G.classList.add("has-error"); valid = false; }
+      else pw2G.classList.remove("has-error");
+
+      if (!agree) { App.showToast("利用規約に同意してください", "error"); valid = false; }
+      if (!valid) {
+        document.getElementById("reg-err").textContent = "入力内容を確認してください。";
+        document.getElementById("reg-err").classList.remove("hidden");
+        return;
+      }
+
+      // デモのため実際には登録しない
+      App.showToast("デモサイトのため実際の登録はできません。テストアカウントをご利用ください。", "info");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TravelNest Demo – トラベル予約サービス</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <!-- ヒーロー -->
+  <section class="hero">
+    <h1>✈ TravelNest <span style="font-size:18px;font-weight:400;opacity:.8">Demo</span></h1>
+    <p>福岡・東京・名古屋・大阪・フィリピン　5エリア 260+ ホテル</p>
+
+    <div class="search-box">
+      <div class="field">
+        <label>目的地・エリア</label>
+        <select id="s-region">
+          <option value="all">すべてのエリア</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>チェックイン</label>
+        <input type="date" id="s-checkin">
+      </div>
+      <div class="field">
+        <label>チェックアウト</label>
+        <input type="date" id="s-checkout">
+      </div>
+      <div class="field" style="max-width:100px">
+        <label>人数</label>
+        <select id="s-guests">
+          <option value="1">1名</option>
+          <option value="2" selected>2名</option>
+          <option value="3">3名</option>
+          <option value="4">4名</option>
+          <option value="5">5名以上</option>
+        </select>
+      </div>
+      <button class="btn-search" onclick="doSearch()">🔍 検索</button>
+    </div>
+  </section>
+
+  <!-- メインコンテンツ -->
+  <div class="page-wrap" style="margin-top:32px;">
+
+    <!-- 地域ピックアップ -->
+    <h2 class="section-title">エリアから探す</h2>
+    <div id="region-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:40px;"></div>
+
+    <!-- おすすめホテル -->
+    <h2 class="section-title">おすすめホテル</h2>
+    <div id="featured-hotels" class="hotel-grid"></div>
+
+    <div style="text-align:center;margin-top:28px;">
+      <a href="search.html" class="btn btn-primary" style="font-size:15px;padding:12px 36px;">すべてのホテルを見る →</a>
+    </div>
+
+    <!-- デモ案内 -->
+    <div class="alert alert-info" style="margin-top:40px;">
+      <div>
+        <strong>🧪 デモサイトの操作方法</strong><br>
+        テストユーザーでログインしてすべての機能をお試しいただけます。<br>
+        ホテルの予約・キャンセル・お気に入り登録など、実際の操作感を確認できます。
+        <a href="help.html#accounts" style="margin-left:8px;">テストアカウント一覧 →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ページ初期化
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "ホーム", activePage: "home" });
+      initDateDefaults();
+      buildRegionCards();
+      buildFeaturedHotels();
+      buildRegionOptions();
+    });
+
+    function initDateDefaults() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfter = new Date(tomorrow);
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      document.getElementById("s-checkin").value = App.fmtDate(tomorrow);
+      document.getElementById("s-checkout").value = App.fmtDate(dayAfter);
+      document.getElementById("s-checkin").min = App.fmtDate(tomorrow);
+    }
+
+    function buildRegionOptions() {
+      const sel = document.getElementById("s-region");
+      REGIONS.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id; opt.textContent = r.emoji + " " + r.name;
+        sel.appendChild(opt);
+      });
+    }
+
+    function buildRegionCards() {
+      const container = document.getElementById("region-cards");
+      REGIONS.forEach(r => {
+        const count = HOTELS.filter(h => h.region === r.id).length;
+        const card = document.createElement("div");
+        card.style.cssText = `
+          background:${App.hotelBgColor(r.id)};
+          color:white; border-radius:10px; padding:24px 20px;
+          cursor:pointer; text-align:center; transition:.2s;
+          box-shadow:0 4px 14px rgba(0,0,0,.15);
+        `;
+        card.innerHTML = `
+          <div style="font-size:40px;margin-bottom:8px;">${r.emoji}</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:4px;">${r.name}</div>
+          <div style="font-size:13px;opacity:.8">${count}ホテル</div>
+        `;
+        card.onmouseover = () => { card.style.transform = "translateY(-4px)"; card.style.boxShadow = "0 8px 24px rgba(0,0,0,.25)"; };
+        card.onmouseout  = () => { card.style.transform = ""; card.style.boxShadow = "0 4px 14px rgba(0,0,0,.15)"; };
+        card.onclick = () => {
+          App.saveSearchParams({ region: r.id });
+          window.location.href = "search.html";
+        };
+        container.appendChild(card);
+      });
+    }
+
+    function buildFeaturedHotels() {
+      // 各エリアから高評価ホテルを1件ずつ
+      const featured = REGIONS.map(r =>
+        HOTELS.filter(h => h.region === r.id && h.stars >= 4)[0]
+      ).filter(Boolean);
+      // バルテスシリーズも追加
+      const valtes = HOTELS.filter(h => h.name.includes("バルテス")).slice(0,3);
+      const all = [...new Map([...featured, ...valtes].map(h => [h.id, h])).values()].slice(0,8);
+
+      const container = document.getElementById("featured-hotels");
+      all.forEach(h => {
+        container.appendChild(createHotelCard(h));
+      });
+    }
+
+    function createHotelCard(h) {
+      const region = App.getRegionById(h.region);
+      const card = document.createElement("div");
+      card.className = "hotel-card";
+      card.innerHTML = `
+        <div class="hotel-card-img" style="background:${App.hotelBgColor(h.region)}">
+          <span>${region?.emoji || "🏨"}</span>
+          ${h.name.includes("バルテス") ? `<span class="tag-ribbon">バルテス</span>` : ""}
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-card-name">${h.name}</div>
+          <div class="hotel-card-region">📍 ${App.regionName(h.region)}</div>
+          <div class="hotel-stars">${App.starsHtml(h.stars)}</div>
+          <div class="facility-tags" style="margin:4px 0">
+            ${h.facilities.slice(0,3).map(f=>`<span class="facility-tag">${f}</span>`).join("")}
+          </div>
+          <p style="font-size:12px;color:var(--gray);flex:1">${h.desc}</p>
+          <div class="hotel-card-price">${App.fmtPrice(h.priceBase)}<span>/泊〜</span></div>
+        </div>
+        <div class="hotel-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openDetail('${h.id}')">詳細を見る</button>
+          <button class="btn btn-primary btn-sm" onclick="bookHotel('${h.id}')">予約する</button>
+        </div>
+      `;
+      return card;
+    }
+
+    function openDetail(hotelId) {
+      window.open(`hotel.html?id=${hotelId}`, "_blank");
+    }
+
+    function bookHotel(hotelId) {
+      if (!App.requireLogin()) return;
+      const sp = App.loadSearchParams();
+      sp.hotelId = hotelId;
+      App.saveSearchParams(sp);
+      // 日程チェック
+      const ci = document.getElementById("s-checkin")?.value;
+      const co = document.getElementById("s-checkout")?.value;
+      if (ci && co) {
+        sp.checkin = ci; sp.checkout = co;
+        App.saveSearchParams(sp);
+        window.location.href = "booking.html";
+      } else {
+        window.location.href = `date-select.html?hotelId=${hotelId}`;
+      }
+    }
+
+    function doSearch() {
+      const region  = document.getElementById("s-region").value;
+      const checkin = document.getElementById("s-checkin").value;
+      const checkout= document.getElementById("s-checkout").value;
+      const guests  = document.getElementById("s-guests").value;
+      App.saveSearchParams({ region, checkin, checkout, guests });
+      window.location.href = "search.html";
+    }
+  </script>
+</body>
+</html>

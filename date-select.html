@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>日程選択・空き確認 | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px;max-width:860px">
+    <div class="breadcrumb">
+      <a href="search.html">← 検索結果に戻る</a>
+    </div>
+
+    <div class="alert alert-info" style="margin-bottom:20px">
+      🔗 <strong>起動条件：</strong>日程・人数が未指定のまま「予約」ボタンをクリックした場合にこの画面が表示されます。
+    </div>
+
+    <!-- ステップバー -->
+    <div class="step-bar" id="step-bar">
+      <div class="step-item active" id="step1-tab">① 日程・人数入力</div>
+      <div class="step-item" id="step2-tab">② 空き確認</div>
+      <div class="step-item" id="step3-tab">③ 予約入力へ進む</div>
+    </div>
+
+    <!-- STEP 1: 日程入力 -->
+    <div id="step1" class="form-section">
+      <h3>日程・人数を選択してください</h3>
+      <div id="hotel-info-banner" class="alert alert-info" style="margin-bottom:16px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="form-group" id="ci-group">
+          <label>チェックイン * <span style="font-size:11px;color:var(--warn)">（翌日以降）</span></label>
+          <input type="date" id="ds-checkin" onchange="validateCheckin()">
+          <span class="error-msg">チェックインは翌日以降のみ指定できます</span>
+        </div>
+        <div class="form-group" id="co-group">
+          <label>チェックアウト *</label>
+          <input type="date" id="ds-checkout" onchange="validateDates()">
+          <span class="error-msg">チェックアウトはチェックイン翌日以降です</span>
+        </div>
+        <div class="form-group">
+          <label>人数</label>
+          <select id="ds-guests">
+            <option value="1">1名</option>
+            <option value="2" selected>2名</option>
+            <option value="3">3名</option>
+            <option value="4">4名</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>部屋数</label>
+          <select id="ds-rooms">
+            <option value="1" selected>1室</option>
+            <option value="2">2室</option>
+            <option value="3">3室</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="alert alert-warn" style="margin-bottom:16px">
+        ⚠️ チェックインは予約日の翌日以降のみ選択できます
+      </div>
+
+      <button class="btn btn-primary" style="font-size:15px;padding:12px 36px" onclick="checkAvailability()">
+        指定範囲で空きを確認 →
+      </button>
+    </div>
+
+    <!-- STEP 2: 空き確認結果 -->
+    <div id="step2" class="hidden">
+      <div class="form-section">
+        <h3>空き確認結果</h3>
+        <div id="avail-summary" class="alert alert-success" style="margin-bottom:16px"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <thead>
+            <tr>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:left">部屋タイプ</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:right">料金（1泊）</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:right">合計</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:center">空室</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:center"></th>
+            </tr>
+          </thead>
+          <tbody id="room-avail-list"></tbody>
+        </table>
+        <div style="margin-top:16px">
+          <button class="btn btn-secondary" onclick="backToStep1()">← 日程を変更する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: ガイド（予約入力へ） -->
+    <div id="step3" class="hidden">
+      <div class="form-section">
+        <h3>③ 予約入力へ進みます</h3>
+        <div class="alert alert-success">✅ 空き確認が完了しました。以下の内容で予約入力画面に進みます。</div>
+        <table class="confirm-table" style="margin-bottom:20px">
+          <tbody id="step3-summary"></tbody>
+        </table>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-secondary" onclick="backToStep2()">← 部屋を変更する</button>
+          <button class="btn btn-primary" style="font-size:15px;padding:12px 32px" onclick="goToBooking()">
+            予約入力へ進む →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentHotel = null;
+    let selectedRoom = null;
+    let nightsCount = 0;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "日程選択・空き確認" });
+
+      if (!App.requireLogin()) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const hotelId = params.get("hotelId") || App.loadSearchParams().hotelId;
+      if (!hotelId) { window.location.href = "search.html"; return; }
+
+      currentHotel = App.getHotelById(hotelId);
+      if (!currentHotel) { window.location.href = "search.html"; return; }
+
+      // ホテル情報バナー
+      document.getElementById("hotel-info-banner").innerHTML =
+        `🏨 <strong>${currentHotel.name}</strong> &nbsp;📍 ${App.regionName(currentHotel.region)} &nbsp; ${App.starsHtml(currentHotel.stars)}`;
+
+      // 既存日程があれば引き継ぎ
+      const sp = App.loadSearchParams();
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfter  = new Date(tomorrow); dayAfter.setDate(dayAfter.getDate() + 2);
+
+      document.getElementById("ds-checkin").value  = sp.checkin  || App.fmtDate(tomorrow);
+      document.getElementById("ds-checkout").value = sp.checkout || App.fmtDate(dayAfter);
+      document.getElementById("ds-guests").value   = sp.guests   || "2";
+      document.getElementById("ds-checkin").min    = App.fmtDate(tomorrow);
+    });
+
+    function validateCheckin() {
+      const ci = document.getElementById("ds-checkin").value;
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0,0,0,0);
+      const ciG = document.getElementById("ci-group");
+      if (ci && new Date(ci) < tomorrow) {
+        ciG.classList.add("has-error");
+      } else {
+        ciG.classList.remove("has-error");
+        // checkoutのminを更新
+        if (ci) {
+          const co = new Date(ci); co.setDate(co.getDate() + 1);
+          document.getElementById("ds-checkout").min = App.fmtDate(co);
+          if (document.getElementById("ds-checkout").value <= ci) {
+            document.getElementById("ds-checkout").value = App.fmtDate(co);
+          }
+        }
+      }
+    }
+
+    function validateDates() {
+      const ci = document.getElementById("ds-checkin").value;
+      const co = document.getElementById("ds-checkout").value;
+      const coG = document.getElementById("co-group");
+      if (ci && co && co <= ci) {
+        coG.classList.add("has-error");
+      } else {
+        coG.classList.remove("has-error");
+      }
+    }
+
+    function checkAvailability() {
+      const ci  = document.getElementById("ds-checkin").value;
+      const co  = document.getElementById("ds-checkout").value;
+      const g   = +document.getElementById("ds-guests").value;
+      const r   = +document.getElementById("ds-rooms").value;
+
+      if (!ci || !co) { App.showToast("日程を入力してください", "error"); return; }
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+      if (new Date(ci) < tomorrow) { App.showToast("チェックインは翌日以降のみ指定できます", "error"); return; }
+      if (co <= ci) { App.showToast("チェックアウトはチェックイン翌日以降です", "error"); return; }
+
+      nightsCount = App.calcNights(ci, co);
+      const avail = App.checkAvailability(currentHotel.id, ci, co);
+
+      // サマリー
+      document.getElementById("avail-summary").innerHTML =
+        `✅ <strong>${currentHotel.name}</strong> &nbsp; ${App.fmtDateJP(ci)} → ${App.fmtDateJP(co)} &nbsp; ${nightsCount}泊 / 大人${g}名`;
+
+      // 部屋一覧
+      const tbody = document.getElementById("room-avail-list");
+      tbody.innerHTML = "";
+      avail.rooms.forEach((rm, i) => {
+        const total = rm.price * nightsCount * r;
+        const tr = document.createElement("tr");
+        tr.style.background = i % 2 === 0 ? "white" : "var(--gray-lt)";
+        tr.innerHTML = `
+          <td style="padding:10px 12px;font-weight:600">${rm.type}</td>
+          <td style="padding:10px 12px;text-align:right;color:var(--primary);font-weight:700">${App.fmtPrice(rm.price)}</td>
+          <td style="padding:10px 12px;text-align:right;font-weight:700">${App.fmtPrice(total)}</td>
+          <td style="padding:10px 12px;text-align:center">
+            <span class="badge ${rm.available ? 'badge-success' : 'badge-danger'}">${rm.available ? "空あり" : "満室"}</span>
+          </td>
+          <td style="padding:10px 12px;text-align:center">
+            ${rm.available
+              ? `<button class="btn btn-primary btn-sm" onclick="selectRoom('${rm.type}',${rm.price},${total})">この部屋で予約</button>`
+              : `<button class="btn btn-sm" disabled style="background:var(--gray-bd);color:white;border:none;border-radius:6px;padding:5px 12px;cursor:not-allowed">満　室</button>`
+            }
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      // STEP2表示
+      document.getElementById("step1").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+      setStepActive(2);
+
+      const sp = App.loadSearchParams();
+      sp.hotelId = currentHotel.id;
+      sp.checkin = ci; sp.checkout = co;
+      sp.guests = g; sp.rooms = r;
+      App.saveSearchParams(sp);
+    }
+
+    function selectRoom(type, price, total) {
+      selectedRoom = { type, price, total };
+      const sp = App.loadSearchParams();
+
+      const tbody = document.getElementById("step3-summary");
+      tbody.innerHTML = `
+        <tr><td>ホテル</td><td><strong>${currentHotel.name}</strong></td></tr>
+        <tr><td>部屋タイプ</td><td>${type}</td></tr>
+        <tr><td>チェックイン</td><td>${App.fmtDateJP(sp.checkin)}</td></tr>
+        <tr><td>チェックアウト</td><td>${App.fmtDateJP(sp.checkout)}</td></tr>
+        <tr><td>宿泊数</td><td>${nightsCount}泊</td></tr>
+        <tr><td>人数</td><td>大人${sp.guests}名</td></tr>
+        <tr><td>合計金額</td><td>${App.fmtPrice(total)}</td></tr>
+      `;
+
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("step3").classList.remove("hidden");
+      setStepActive(3);
+    }
+
+    function goToBooking() {
+      const sp = App.loadSearchParams();
+      sp.roomType  = selectedRoom.type;
+      sp.roomPrice = selectedRoom.price;
+      sp.totalPrice= selectedRoom.total;
+      App.saveSearchParams(sp);
+      window.location.href = "booking.html";
+    }
+
+    function backToStep1() {
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("step1").classList.remove("hidden");
+      setStepActive(1);
+    }
+
+    function backToStep2() {
+      document.getElementById("step3").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+      setStepActive(2);
+    }
+
+    function setStepActive(n) {
+      [1,2,3].forEach(i => {
+        const el = document.getElementById(`step${i}-tab`);
+        el.className = "step-item" + (i < n ? " done" : i === n ? " active" : "");
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>マイページ | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px">
+    <div id="mypage-content"></div>
+  </div>
+
+  <script>
+    let currentTab = "bookings";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "マイページ" });
+      if (!App.requireLogin()) return;
+      renderMyPage();
+    });
+
+    function renderMyPage() {
+      const u = App.currentUser();
+      const content = document.getElementById("mypage-content");
+
+      content.innerHTML = `
+        <!-- プロフィールヘッダー -->
+        <div class="card" style="padding:24px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);color:white;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${u.name.charAt(0)}
+          </div>
+          <div>
+            <div style="font-size:22px;font-weight:700;color:var(--accent)">${u.name} 様</div>
+            <div style="font-size:13px;color:var(--gray)">${u.email}</div>
+            <div style="font-size:13px;color:var(--gray)">📞 ${u.phone}</div>
+          </div>
+          <div style="margin-left:auto">
+            <button class="btn btn-secondary btn-sm" onclick="App.logout()">ログアウト</button>
+          </div>
+        </div>
+
+        <!-- タブ -->
+        <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray-bd)">
+          <button class="tab-btn active" id="tab-bookings" onclick="switchTab('bookings')">📋 予約履歴</button>
+          <button class="tab-btn" id="tab-favorites" onclick="switchTab('favorites')">❤️ お気に入り</button>
+        </div>
+
+        <!-- 予約履歴 -->
+        <div id="pane-bookings"></div>
+
+        <!-- お気に入り -->
+        <div id="pane-favorites" class="hidden"></div>
+      `;
+
+      // タブスタイル
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        b.style.cssText = "background:none;border:none;border-bottom:3px solid transparent;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;color:var(--gray);transition:.2s";
+      });
+      document.getElementById("tab-bookings").style.borderBottomColor = "var(--primary)";
+      document.getElementById("tab-bookings").style.color = "var(--primary)";
+
+      renderBookings();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        b.style.borderBottomColor = "transparent";
+        b.style.color = "var(--gray)";
+      });
+      const active = document.getElementById(`tab-${tab}`);
+      active.style.borderBottomColor = "var(--primary)";
+      active.style.color = "var(--primary)";
+
+      document.getElementById("pane-bookings").classList.toggle("hidden", tab !== "bookings");
+      document.getElementById("pane-favorites").classList.toggle("hidden", tab !== "favorites");
+
+      if (tab === "bookings") renderBookings();
+      if (tab === "favorites") renderFavorites();
+    }
+
+    function renderBookings() {
+      const u = App.currentUser();
+      const bookings = App.getBookings(u.id);
+      const pane = document.getElementById("pane-bookings");
+
+      // タブフィルター
+      const filters = [
+        { key: "all",       label: `すべて (${bookings.length})` },
+        { key: "confirmed", label: `予約済み (${bookings.filter(b=>b.status==="confirmed").length})` },
+        { key: "completed", label: `完了 (${bookings.filter(b=>b.status==="completed").length})` },
+        { key: "cancelled", label: `キャンセル (${bookings.filter(b=>b.status==="cancelled").length})` },
+      ];
+
+      pane.innerHTML = `
+        <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" id="status-filters">
+          ${filters.map(f => `
+            <button class="region-tab${f.key==='all'?' active':''}" onclick="filterBookings('${f.key}',this)">${f.label}</button>
+          `).join("")}
+        </div>
+        <div id="booking-list"></div>
+      `;
+      filterBookings("all", document.querySelector("#status-filters .region-tab.active"));
+    }
+
+    function filterBookings(status, btn) {
+      document.querySelectorAll("#status-filters .region-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const u = App.currentUser();
+      let bookings = App.getBookings(u.id);
+      if (status !== "all") bookings = bookings.filter(b => b.status === status);
+
+      const list = document.getElementById("booking-list");
+      if (bookings.length === 0) {
+        list.innerHTML = `<div class="alert alert-info">該当する予約がありません。</div>`; return;
+      }
+
+      // ソート：チェックイン日降順
+      bookings.sort((a,b) => new Date(b.checkin) - new Date(a.checkin));
+
+      list.innerHTML = `
+        <div style="overflow-x:auto">
+          <table class="bookings-table">
+            <thead>
+              <tr>
+                <th>予約番号</th>
+                <th>ホテル名</th>
+                <th>チェックイン</th>
+                <th>泊数</th>
+                <th>合計</th>
+                <th>ステータス</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${bookings.map(b => {
+                const hotel = App.getHotelById(b.hotelId);
+                const statusBadge = {
+                  confirmed: `<span class="badge badge-primary">予約済み</span>`,
+                  completed: `<span class="badge badge-success">完　了</span>`,
+                  cancelled: `<span class="badge badge-gray">キャンセル</span>`,
+                }[b.status] || "";
+
+                const today = new Date(); today.setHours(0,0,0,0);
+                const checkin = new Date(b.checkin); checkin.setHours(0,0,0,0);
+                const canCancel = b.status === "confirmed" && checkin > today;
+
+                return `
+                  <tr>
+                    <td style="font-size:12px;color:var(--primary);font-weight:600">${b.bookingNo}</td>
+                    <td><span class="hotel-link" onclick="window.open('hotel.html?id=${b.hotelId}','_blank')">${hotel?.name || "不明"}</span></td>
+                    <td style="white-space:nowrap;font-size:13px">${App.fmtDateJP(b.checkin)}</td>
+                    <td style="text-align:center">${b.nights}泊</td>
+                    <td style="font-weight:700;white-space:nowrap">${App.fmtPrice(b.totalPrice)}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                      ${canCancel
+                        ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}','${b.bookingNo}')">取消</button>`
+                        : b.status === "confirmed"
+                          ? `<span style="font-size:11px;color:var(--gray)">取消不可</span>`
+                          : ""
+                      }
+                    </td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function cancelBooking(id, no) {
+      if (!confirm(`予約番号 ${no} をキャンセルしますか？\nこの操作は取り消せません。`)) return;
+      const res = App.cancelBooking(id);
+      if (res.ok) {
+        App.showToast("予約をキャンセルしました", "success");
+        renderBookings();
+      } else {
+        App.showToast(res.msg, "error");
+      }
+    }
+
+    function renderFavorites() {
+      const hotels = App.getFavoriteHotels();
+      const pane = document.getElementById("pane-favorites");
+
+      if (hotels.length === 0) {
+        pane.innerHTML = `
+          <div class="alert alert-info">
+            まだお気に入りがありません。<br>
+            ホテル詳細画面の「♡ お気に入り」ボタンで追加できます。<br>
+            <a href="search.html" class="btn btn-primary btn-sm" style="margin-top:10px;display:inline-flex">ホテルを探す</a>
+          </div>`;
+        return;
+      }
+
+      pane.innerHTML = `<div class="hotel-grid" id="fav-grid"></div>`;
+      const grid = document.getElementById("fav-grid");
+      hotels.forEach(h => {
+        const region = App.getRegionById(h.region);
+        const card = document.createElement("div");
+        card.className = "hotel-card";
+        card.innerHTML = `
+          <div class="hotel-card-img" style="background:${App.hotelBgColor(h.region)};font-size:42px">
+            ${region?.emoji || "🏨"}
+          </div>
+          <div class="hotel-card-body">
+            <div class="hotel-card-name">${h.name}</div>
+            <div class="hotel-card-region">📍 ${App.regionName(h.region)}</div>
+            <div class="hotel-stars">${App.starsHtml(h.stars)}</div>
+            <div class="hotel-card-price">${App.fmtPrice(h.priceBase)}<span>/泊〜</span></div>
+          </div>
+          <div class="hotel-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="window.open('hotel.html?id=${h.id}','_blank')">詳細 ↗</button>
+            <button class="btn btn-danger btn-sm" onclick="removeFav('${h.id}',this)">♥ 解除</button>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function removeFav(hotelId, btn) {
+      App.toggleFavorite(hotelId);
+      App.showToast("お気に入りを解除しました", "info");
+      renderFavorites();
+    }
+  </script>
+</body>
+</html>

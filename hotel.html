@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ホテル詳細 | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div id="hotel-detail-wrap" class="page-wrap" style="margin-top:80px;max-width:900px"></div>
+
+  <script>
+    let currentHotel = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "ホテル詳細", activePage: "detail" });
+
+      const params = new URLSearchParams(window.location.search);
+      const hotelId = params.get("id");
+      if (!hotelId) { window.location.href = "search.html"; return; }
+
+      currentHotel = App.getHotelById(hotelId);
+      if (!currentHotel) { document.getElementById("hotel-detail-wrap").innerHTML = "<p>ホテルが見つかりません。</p>"; return; }
+
+      renderDetail();
+    });
+
+    function renderDetail() {
+      const h = currentHotel;
+      const region = App.getRegionById(h.region);
+      const avail = App.checkAvailability(h.id, null, null);
+      const isFav = App.isFavorite(h.id);
+
+      document.title = `${h.name} | TravelNest Demo`;
+
+      document.getElementById("hotel-detail-wrap").innerHTML = `
+        <div class="breadcrumb">
+          <a href="index.html">ホーム</a><span class="sep">›</span>
+          <a href="search.html">ホテル検索</a><span class="sep">›</span>
+          <span>${h.name}</span>
+        </div>
+
+        <!-- ヘロー画像エリア -->
+        <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:24px;background:${App.hotelBgColor(h.region)};height:280px;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:72px;">${region?.emoji || "🏨"}</span>
+          ${h.name.includes("バルテス") ? `<span style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700">★ バルテス系列ホテル</span>` : ""}
+          <button id="fav-btn" onclick="toggleFav()" style="
+            position:absolute;top:16px;left:16px;
+            background:${isFav ? '#E11D48' : 'rgba(255,255,255,.2)'};
+            color:white;border:2px solid rgba(255,255,255,.5);
+            border-radius:20px;padding:6px 16px;font-size:14px;
+            font-weight:700;cursor:pointer;transition:.2s;
+          ">${isFav ? "♥ 保存済み" : "♡ お気に入り"}</button>
+        </div>
+
+        <!-- 基本情報 -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;margin-bottom:24px">
+          <div>
+            <h1 style="font-size:28px;font-weight:700;color:var(--accent);margin-bottom:6px">${h.name}</h1>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <span class="hotel-stars" style="font-size:16px">${App.starsHtml(h.stars)}</span>
+              <span style="font-size:13px;color:var(--gray)">📍 ${App.regionName(h.region)}</span>
+            </div>
+            <p style="font-size:15px;color:var(--gray);line-height:1.7;margin-bottom:14px">${h.desc}</p>
+            <div class="facility-tags">
+              ${h.facilities.map(f=>`<span class="facility-tag">${f}</span>`).join("")}
+            </div>
+          </div>
+          <div style="text-align:right;background:var(--light-bg);padding:20px;border-radius:10px;min-width:200px">
+            <div style="font-size:13px;color:var(--gray);margin-bottom:6px">最安料金</div>
+            <div style="font-size:30px;font-weight:700;color:var(--primary)">${App.fmtPrice(h.priceBase)}<span style="font-size:14px;font-weight:400">/泊〜</span></div>
+            <div style="font-size:11px;color:var(--gray);margin-bottom:16px">税・サービス料込み</div>
+            <button class="btn btn-primary" style="width:100%;font-size:15px;padding:11px" onclick="handleBook()">
+              この日程で予約する
+            </button>
+            <div style="font-size:11px;color:var(--gray);margin-top:6px">ログインが必要です</div>
+          </div>
+        </div>
+
+        <!-- 先2週間空き状況 -->
+        <div class="card" style="margin-bottom:24px">
+          <div style="background:var(--accent);color:white;padding:14px 18px;border-radius:8px 8px 0 0;font-size:15px;font-weight:700">
+            📅 先2週間の空き状況
+          </div>
+          <div style="padding:16px">
+            <div class="availability-grid" id="avail-grid"></div>
+            <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--gray)">
+              <span><span style="display:inline-block;width:14px;height:14px;background:#D1FAE5;border:1px solid var(--gray-bd);vertical-align:middle;margin-right:4px"></span>空あり</span>
+              <span><span style="display:inline-block;width:14px;height:14px;background:#FEE2E2;border:1px solid var(--gray-bd);vertical-align:middle;margin-right:4px"></span>満室</span>
+              <span style="margin-left:auto">※ リアルタイム更新・先14日間表示</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 部屋タイプ一覧 -->
+        <div class="card" style="margin-bottom:24px">
+          <div style="background:var(--primary);color:white;padding:14px 18px;border-radius:8px 8px 0 0;font-size:15px;font-weight:700">
+            🛏 部屋タイプ・料金
+          </div>
+          <div style="padding:16px">
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <thead>
+                <tr>
+                  <th style="background:var(--gray-lt);padding:10px 12px;text-align:left;color:var(--accent)">部屋タイプ</th>
+                  <th style="background:var(--gray-lt);padding:10px 12px;text-align:right;color:var(--accent)">料金（1泊）</th>
+                  <th style="background:var(--gray-lt);padding:10px 12px;text-align:center;color:var(--accent)">空室</th>
+                  <th style="background:var(--gray-lt);padding:10px 12px;text-align:center;color:var(--accent)"></th>
+                </tr>
+              </thead>
+              <tbody id="room-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 周辺情報 -->
+        <div class="alert alert-info" style="margin-bottom:24px">
+          📍 <strong>${App.regionName(h.region)}エリア</strong>のホテルです。
+          詳細な地図・交通アクセスについては実際の地図サービスでご確認ください。
+          <span style="font-size:11px;color:var(--gray);display:block;margin-top:4px">
+            ※ デモサイトのため詳細な住所・電話番号は掲載しておりません。
+          </span>
+        </div>
+      `;
+
+      // 空き状況グリッド
+      buildAvailGrid(avail.days);
+      // 部屋一覧
+      buildRoomList(avail.rooms);
+    }
+
+    function buildAvailGrid(days) {
+      const el = document.getElementById("avail-grid");
+      const DOW = ["日","月","火","水","木","金","土"];
+      const DOW_COLOR = { 0: "#DC2626", 6: "#0D9488" };
+
+      let html = `<table class="avail-table">
+        <tr>
+          ${days.slice(0,7).map(d => {
+            const dt = new Date(d.date);
+            const dow = dt.getDay();
+            const lbl = `${dt.getMonth()+1}/${dt.getDate()}<br><span style="color:${DOW_COLOR[dow]||'inherit'}">${DOW[dow]}</span>`;
+            return `<th>${lbl}</th>`;
+          }).join("")}
+        </tr>
+        <tr>
+          ${days.slice(0,7).map(d => `
+            <td class="${d.available ? 'avail-ok' : 'avail-ng'}">${d.available ? "空あり" : "満　室"}</td>
+          `).join("")}
+        </tr>
+        <tr>
+          ${days.slice(7,14).map(d => {
+            const dt = new Date(d.date);
+            const dow = dt.getDay();
+            const lbl = `${dt.getMonth()+1}/${dt.getDate()}<br><span style="color:${DOW_COLOR[dow]||'inherit'}">${DOW[dow]}</span>`;
+            return `<th>${lbl}</th>`;
+          }).join("")}
+        </tr>
+        <tr>
+          ${days.slice(7,14).map(d => `
+            <td class="${d.available ? 'avail-ok' : 'avail-ng'}">${d.available ? "空あり" : "満　室"}</td>
+          `).join("")}
+        </tr>
+      </table>`;
+      el.innerHTML = html;
+    }
+
+    function buildRoomList(rooms) {
+      const tbody = document.getElementById("room-list");
+      rooms.forEach((r, i) => {
+        const tr = document.createElement("tr");
+        tr.style.background = i % 2 === 0 ? "white" : "var(--gray-lt)";
+        tr.innerHTML = `
+          <td style="padding:10px 12px;font-weight:600">${r.type}</td>
+          <td style="padding:10px 12px;text-align:right;font-weight:700;color:var(--primary)">${App.fmtPrice(r.price)}</td>
+          <td style="padding:10px 12px;text-align:center">
+            <span class="badge ${r.available ? 'badge-success' : 'badge-danger'}">${r.available ? "空あり" : "満室"}</span>
+          </td>
+          <td style="padding:10px 12px;text-align:center">
+            ${r.available
+              ? `<button class="btn btn-primary btn-sm" onclick="handleBookRoom('${r.type}',${r.price})">この部屋で予約</button>`
+              : `<button class="btn btn-sm" disabled style="background:var(--gray-bd);color:white;border:none;border-radius:6px;padding:5px 12px;cursor:not-allowed">満　室</button>`
+            }
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleBook() {
+      if (!App.requireLogin()) return;
+      const sp = App.loadSearchParams();
+      sp.hotelId = currentHotel.id;
+      App.saveSearchParams(sp);
+      if (sp.checkin && sp.checkout) {
+        window.opener ? window.opener.location.href = "booking.html" : window.location.href = "booking.html";
+        if (window.opener) window.close();
+      } else {
+        const url = `date-select.html?hotelId=${currentHotel.id}`;
+        window.opener ? window.opener.location.href = url : window.location.href = url;
+        if (window.opener) window.close();
+      }
+    }
+
+    function handleBookRoom(roomType, price) {
+      if (!App.requireLogin()) return;
+      const sp = App.loadSearchParams();
+      sp.hotelId = currentHotel.id;
+      sp.roomType = roomType;
+      sp.roomPrice = price;
+      App.saveSearchParams(sp);
+      if (sp.checkin && sp.checkout) {
+        window.opener ? window.opener.location.href = "booking.html" : window.location.href = "booking.html";
+        if (window.opener) window.close();
+      } else {
+        const url = `date-select.html?hotelId=${currentHotel.id}`;
+        window.opener ? window.opener.location.href = url : window.location.href = url;
+        if (window.opener) window.close();
+      }
+    }
+
+    function toggleFav() {
+      const isFav = App.toggleFavorite(currentHotel.id);
+      if (isFav === false && !App.isLoggedIn()) return;
+      const btn = document.getElementById("fav-btn");
+      btn.textContent = isFav ? "♥ 保存済み" : "♡ お気に入り";
+      btn.style.background = isFav ? "#E11D48" : "rgba(255,255,255,.2)";
+      App.showToast(isFav ? "お気に入りに追加しました" : "お気に入りを解除しました", isFav ? "success" : "info");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>予約入力 | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px;max-width:720px">
+    <!-- ステップバー -->
+    <div class="step-bar">
+      <div class="step-item active" id="step1-tab">① 予約入力</div>
+      <div class="step-item" id="step2-tab">② 内容確認</div>
+      <div class="step-item" id="step3-tab">③ 予約完了</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div id="step1">
+      <div class="form-section" style="margin-bottom:16px">
+        <h3>🏨 予約ホテル</h3>
+        <div id="hotel-summary"></div>
+      </div>
+
+      <div class="form-section" style="margin-bottom:16px">
+        <h3>📋 代表者情報</h3>
+        <div class="alert alert-warn" style="margin-bottom:16px">
+          ⚠️ 期間の重複する予約は確認画面への進行時に自動チェックされます。
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group" id="g-sei">
+            <label>姓（漢字）*</label>
+            <input type="text" id="b-sei" placeholder="山田">
+            <span class="error-msg">必須項目です</span>
+          </div>
+          <div class="form-group" id="g-mei">
+            <label>名（漢字）*</label>
+            <input type="text" id="b-mei" placeholder="太郎">
+            <span class="error-msg">必須項目です</span>
+          </div>
+          <div class="form-group" id="g-kana-sei">
+            <label>姓（フリガナ）*</label>
+            <input type="text" id="b-kana-sei" placeholder="ヤマダ">
+            <span class="error-msg">必須項目です</span>
+          </div>
+          <div class="form-group" id="g-kana-mei">
+            <label>名（フリガナ）*</label>
+            <input type="text" id="b-kana-mei" placeholder="タロウ">
+            <span class="error-msg">必須項目です</span>
+          </div>
+          <div class="form-group" id="g-phone">
+            <label>電話番号 *</label>
+            <input type="tel" id="b-phone" placeholder="090-XXXX-XXXX">
+            <span class="error-msg">正しい形式で入力してください</span>
+          </div>
+          <div class="form-group" id="g-email">
+            <label>メールアドレス *</label>
+            <input type="email" id="b-email" placeholder="user@example.com">
+            <span class="error-msg">正しいメールアドレスを入力してください</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>特別リクエスト（任意・200文字以内）</label>
+          <textarea id="b-special" rows="3" maxlength="200" placeholder="禁煙室希望、高層階希望、記念日サービス希望など"></textarea>
+          <span class="hint">ご要望に添えない場合もございます（デモのため記録のみ）</span>
+        </div>
+      </div>
+
+      <div id="err-step1" class="alert alert-danger hidden"></div>
+
+      <div style="text-align:right">
+        <button class="btn btn-primary" style="font-size:15px;padding:12px 36px" onclick="goToStep2()">
+          入力内容を確認する →
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="hidden">
+      <div class="form-section" style="margin-bottom:16px">
+        <h3>✅ 予約内容のご確認</h3>
+        <table class="confirm-table" id="confirm-table"></table>
+      </div>
+
+      <div class="form-section" style="margin-bottom:16px">
+        <h3>💳 お支払い情報</h3>
+        <div class="alert alert-info" style="margin-bottom:12px;font-size:13px">
+          💡 これはデモサイトです。実際の決済は行われません。ダミーのカード番号を入力してください。
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div class="form-group" style="grid-column:span 2" id="g-card">
+            <label>カード番号 *</label>
+            <input type="text" id="b-card" placeholder="4242 4242 4242 4242" maxlength="19" oninput="fmtCard(this)">
+            <span class="error-msg">16桁のカード番号を入力してください</span>
+          </div>
+          <div class="form-group" id="g-exp">
+            <label>有効期限 *</label>
+            <input type="text" id="b-exp" placeholder="MM/YY" maxlength="5">
+            <span class="error-msg">MM/YY形式で入力</span>
+          </div>
+          <div class="form-group" id="g-cvv">
+            <label>CVV *</label>
+            <input type="text" id="b-cvv" placeholder="123" maxlength="4">
+            <span class="error-msg">3〜4桁で入力</span>
+          </div>
+          <div class="form-group">
+            <label>名義（ローマ字）</label>
+            <input type="text" id="b-cardname" placeholder="TARO YAMADA">
+          </div>
+        </div>
+      </div>
+
+      <div id="err-step2" class="alert alert-danger hidden"></div>
+
+      <div style="display:flex;gap:12px;justify-content:space-between">
+        <button class="btn btn-secondary" onclick="backToStep1()">← 入力内容を修正する</button>
+        <button class="btn btn-success" style="font-size:15px;padding:12px 36px" onclick="confirmBooking()">
+          予約を確定する ✔
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="hidden">
+      <div class="form-section" style="text-align:center;padding:40px 28px">
+        <div style="font-size:64px;margin-bottom:16px">✅</div>
+        <h2 style="font-size:24px;color:var(--success);margin-bottom:8px">予約が完了しました！</h2>
+        <p style="color:var(--gray);margin-bottom:24px">確認メールをお送りしました（デモのため実際には送信されません）</p>
+
+        <div class="booking-no-box">
+          <div class="label">予約番号</div>
+          <div class="number" id="complete-no"></div>
+        </div>
+
+        <div id="complete-summary" style="text-align:left;margin:20px 0"></div>
+
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a href="mypage.html" class="btn btn-primary">予約履歴を確認する</a>
+          <a href="index.html" class="btn btn-secondary">トップに戻る</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let hotel = null;
+    let sp = {};
+    let formData = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "予約入力" });
+      if (!App.requireLogin()) return;
+
+      sp = App.loadSearchParams();
+      if (!sp.hotelId) { window.location.href = "search.html"; return; }
+      if (!sp.checkin || !sp.checkout) { window.location.href = `date-select.html?hotelId=${sp.hotelId}`; return; }
+
+      hotel = App.getHotelById(sp.hotelId);
+      if (!hotel) { window.location.href = "search.html"; return; }
+
+      // ホテルサマリー
+      const nights = App.calcNights(sp.checkin, sp.checkout);
+      const price  = sp.roomPrice || hotel.priceBase;
+      const total  = price * nights * (sp.rooms || 1);
+
+      document.getElementById("hotel-summary").innerHTML = `
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:36px">${App.getRegionById(hotel.region)?.emoji || "🏨"}</div>
+          <div>
+            <div style="font-size:16px;font-weight:700">${hotel.name}</div>
+            <div style="font-size:13px;color:var(--gray)">📍 ${App.regionName(hotel.region)} &nbsp; ${App.starsHtml(hotel.stars)}</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:12px;color:var(--gray)">${App.fmtDateJP(sp.checkin)} → ${App.fmtDateJP(sp.checkout)}</div>
+            <div style="font-size:12px;color:var(--gray)">${nights}泊 / 大人${sp.guests || 2}名 / ${sp.roomType || "スタンダードダブル"}</div>
+            <div style="font-size:20px;font-weight:700;color:var(--primary)">${App.fmtPrice(total)}</div>
+          </div>
+        </div>`;
+
+      // ログインユーザーの情報を自動補完
+      const u = App.currentUser();
+      if (u) {
+        const [sei, mei] = u.name.split(" ");
+        document.getElementById("b-sei").value  = sei || "";
+        document.getElementById("b-mei").value  = mei || "";
+        document.getElementById("b-email").value = u.email;
+        document.getElementById("b-phone").value = u.phone;
+      }
+
+      sp.totalPrice = total;
+      sp.nights = nights;
+      App.saveSearchParams(sp);
+    });
+
+    function fmtCard(input) {
+      let v = input.value.replace(/\D/g,"").slice(0,16);
+      input.value = v.match(/.{1,4}/g)?.join(" ") || v;
+    }
+
+    function goToStep2() {
+      const sei      = document.getElementById("b-sei").value.trim();
+      const mei      = document.getElementById("b-mei").value.trim();
+      const kanaSei  = document.getElementById("b-kana-sei").value.trim();
+      const kanaMei  = document.getElementById("b-kana-mei").value.trim();
+      const phone    = document.getElementById("b-phone").value.trim();
+      const email    = document.getElementById("b-email").value.trim();
+      const special  = document.getElementById("b-special").value.trim();
+
+      let valid = true;
+      const req = [
+        ["g-sei",sei], ["g-mei",mei], ["g-kana-sei",kanaSei],
+        ["g-kana-mei",kanaMei], ["g-phone",phone], ["g-email",email]
+      ];
+      req.forEach(([id, val]) => {
+        const g = document.getElementById(id);
+        if (!val) { g.classList.add("has-error"); valid = false; }
+        else g.classList.remove("has-error");
+      });
+      if (!email.includes("@")) { document.getElementById("g-email").classList.add("has-error"); valid = false; }
+
+      if (!valid) {
+        document.getElementById("err-step1").textContent = "必須項目を正しく入力してください。";
+        document.getElementById("err-step1").classList.remove("hidden");
+        return;
+      }
+      document.getElementById("err-step1").classList.add("hidden");
+
+      formData = { sei, mei, kanaSei, kanaMei, phone, email, special };
+
+      // 確認テーブル
+      const nights = sp.nights || App.calcNights(sp.checkin, sp.checkout);
+      const total  = sp.totalPrice || (hotel.priceBase * nights);
+      const rows = [
+        ["ホテル",        hotel.name],
+        ["部屋タイプ",    sp.roomType || "スタンダードダブル"],
+        ["チェックイン",  App.fmtDateJP(sp.checkin)],
+        ["チェックアウト",App.fmtDateJP(sp.checkout)],
+        [`宿泊数 / 人数`, `${nights}泊 / 大人${sp.guests || 2}名`],
+        ["代表者氏名",    `${sei} ${mei}（${kanaSei} ${kanaMei}）`],
+        ["電話番号",      phone],
+        ["メールアドレス",email],
+        ...(special ? [["特別リクエスト", special]] : []),
+        ["合計金額",      App.fmtPrice(total)],
+      ];
+      const tbody = document.getElementById("confirm-table");
+      tbody.innerHTML = rows.map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+
+      document.getElementById("step1").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+      document.getElementById("step1-tab").className = "step-item done";
+      document.getElementById("step2-tab").className = "step-item active";
+      window.scrollTo(0,0);
+    }
+
+    function backToStep1() {
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("step1").classList.remove("hidden");
+      document.getElementById("step1-tab").className = "step-item active";
+      document.getElementById("step2-tab").className = "step-item";
+    }
+
+    function confirmBooking() {
+      const card = document.getElementById("b-card").value.replace(/\s/g,"");
+      const exp  = document.getElementById("b-exp").value;
+      const cvv  = document.getElementById("b-cvv").value;
+
+      let valid = true;
+      if (card.length < 16) { document.getElementById("g-card").classList.add("has-error"); valid = false; }
+      else document.getElementById("g-card").classList.remove("has-error");
+      if (!/^\d{2}\/\d{2}$/.test(exp)) { document.getElementById("g-exp").classList.add("has-error"); valid = false; }
+      else document.getElementById("g-exp").classList.remove("has-error");
+      if (cvv.length < 3) { document.getElementById("g-cvv").classList.add("has-error"); valid = false; }
+      else document.getElementById("g-cvv").classList.remove("has-error");
+
+      if (!valid) {
+        document.getElementById("err-step2").textContent = "お支払い情報を正しく入力してください。";
+        document.getElementById("err-step2").classList.remove("hidden");
+        return;
+      }
+
+      const res = App.createBooking({
+        userId:    App.currentUser().id,
+        hotelId:   sp.hotelId,
+        checkin:   sp.checkin,
+        checkout:  sp.checkout,
+        guests:    +(sp.guests || 2),
+        rooms:     +(sp.rooms || 1),
+        roomType:  sp.roomType || "スタンダードダブル",
+        totalPrice:sp.totalPrice || hotel.priceBase * App.calcNights(sp.checkin, sp.checkout),
+        specialRequest: formData.special,
+      });
+
+      if (!res.ok) {
+        document.getElementById("err-step2").textContent = res.msg;
+        document.getElementById("err-step2").classList.remove("hidden");
+        return;
+      }
+
+      // 完了画面
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("step3").classList.remove("hidden");
+      document.getElementById("step2-tab").className = "step-item done";
+      document.getElementById("step3-tab").className = "step-item active";
+
+      document.getElementById("complete-no").textContent = res.booking.bookingNo;
+      document.getElementById("complete-summary").innerHTML = `
+        <table class="confirm-table">
+          <tr><td>ホテル</td><td>${hotel.name}</td></tr>
+          <tr><td>チェックイン</td><td>${App.fmtDateJP(sp.checkin)}</td></tr>
+          <tr><td>チェックアウト</td><td>${App.fmtDateJP(sp.checkout)}</td></tr>
+          <tr><td>合計金額</td><td>${App.fmtPrice(res.booking.totalPrice)}</td></tr>
+        </table>`;
+
+      window.scrollTo(0,0);
+      // 検索パラメータをクリア
+      App.saveSearchParams({});
+    }
+  </script>
+</body>
+</html>

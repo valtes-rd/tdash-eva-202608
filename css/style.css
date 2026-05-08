@@ -1,0 +1,470 @@
+/* ============================================================
+   TravelNest Demo – Global Styles
+   配色：primary #065A82 / accent #21295C / success #0D9488
+   ============================================================ */
+
+/* ── リセット & 変数 ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary:    #065A82;
+  --primary-dk: #0A3D5C;
+  --accent:     #21295C;
+  --success:    #0D9488;
+  --warn:       #D97706;
+  --danger:     #DC2626;
+  --white:      #FFFFFF;
+  --gray:       #64748B;
+  --gray-lt:    #F1F5F9;
+  --gray-bd:    #CBD5E1;
+  --text:       #1E293B;
+  --light-bg:   #EBF5FB;
+  --shadow:     0 2px 12px rgba(6,90,130,.12);
+  --radius:     8px;
+  --trans:      .2s ease;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+  background: var(--gray-lt);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; }
+button, input, select, textarea { font-family: inherit; }
+
+/* ── 免責バナー ── */
+.disclaimer-banner {
+  background: #FFF7ED;
+  border-bottom: 2px solid var(--warn);
+  padding: 8px 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #92400E;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.disclaimer-banner strong { color: var(--warn); }
+
+/* ── グローバルヘッダー ── */
+.site-header {
+  background: var(--primary-dk);
+  position: sticky;
+  top: 36px;
+  z-index: 900;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 0 20px;
+  gap: 12px;
+}
+.logo { display: flex; align-items: center; gap: 8px; color: var(--white); font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.logo:hover { text-decoration: none; color: #A8D8F0; }
+.logo .plane { font-size: 20px; }
+
+.header-search {
+  flex: 1;
+  max-width: 380px;
+  display: flex;
+  background: rgba(255,255,255,.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.header-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 8px 12px; color: var(--white); font-size: 13px;
+}
+.header-search input::placeholder { color: rgba(255,255,255,.6); }
+.header-search button {
+  background: var(--primary); border: none; cursor: pointer;
+  padding: 0 14px; color: var(--white); font-size: 15px; transition: var(--trans);
+}
+.header-search button:hover { background: var(--accent); }
+
+.header-nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.header-nav a, .header-nav button {
+  background: none; border: none; cursor: pointer;
+  color: #A8D8F0; font-size: 13px; padding: 6px 12px;
+  border-radius: 4px; white-space: nowrap; transition: var(--trans);
+}
+.header-nav a:hover, .header-nav button:hover { background: rgba(255,255,255,.1); color: var(--white); text-decoration: none; }
+.btn-register {
+  background: var(--primary) !important; color: var(--white) !important;
+  font-weight: 600 !important; border-radius: 4px;
+}
+.btn-register:hover { background: var(--accent) !important; }
+.btn-mypage { color: var(--warn) !important; font-weight: 600 !important; }
+
+.avatar-circle {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--success); color: var(--white);
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── メインレイアウト ── */
+.page-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* ── ヒーロー検索セクション ── */
+.hero {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+  color: var(--white);
+  padding: 60px 20px;
+  text-align: center;
+}
+.hero h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+.hero p { font-size: 16px; opacity: .85; margin-bottom: 32px; }
+
+.search-box {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.search-box .field { flex: 1; min-width: 130px; }
+.search-box label { font-size: 11px; font-weight: 600; color: var(--gray); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.search-box input, .search-box select {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-bd);
+  border-radius: 6px; font-size: 14px; color: var(--text);
+  background: var(--white); transition: var(--trans);
+}
+.search-box input:focus, .search-box select:focus {
+  border-color: var(--primary); outline: none;
+  box-shadow: 0 0 0 3px rgba(6,90,130,.15);
+}
+.search-box .btn-search {
+  background: var(--primary); color: var(--white);
+  border: none; border-radius: 6px; padding: 10px 24px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: var(--trans); white-space: nowrap;
+}
+.search-box .btn-search:hover { background: var(--accent); }
+
+/* ── ボタン共通 ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: var(--trans); }
+.btn-primary { background: var(--primary); color: var(--white); }
+.btn-primary:hover { background: var(--accent); color: var(--white); text-decoration: none; }
+.btn-secondary { background: var(--white); color: var(--primary); border-color: var(--primary); }
+.btn-secondary:hover { background: var(--light-bg); text-decoration: none; }
+.btn-success { background: var(--success); color: var(--white); }
+.btn-success:hover { background: #0a8070; color: var(--white); text-decoration: none; }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-danger:hover { background: #b91c1c; color: var(--white); text-decoration: none; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── カード ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ── ホテルカード ── */
+.hotel-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform var(--trans), box-shadow var(--trans);
+  display: flex;
+  flex-direction: column;
+}
+.hotel-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(6,90,130,.18); }
+
+.hotel-card-img {
+  width: 100%; height: 180px; object-fit: cover;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--white); font-size: 48px;
+  position: relative; overflow: hidden;
+}
+.hotel-card-img .tag-ribbon {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--success); color: var(--white);
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+}
+.hotel-card-img .tag-ribbon.soldout {
+  background: var(--danger);
+}
+
+.hotel-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.hotel-card-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.hotel-card-region { font-size: 12px; color: var(--gray); }
+.hotel-stars { color: #F59E0B; font-size: 13px; }
+.hotel-card-price { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: auto; }
+.hotel-card-price span { font-size: 12px; font-weight: 400; color: var(--gray); }
+
+.hotel-card-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--gray-lt);
+  display: flex; gap: 8px;
+}
+.hotel-card-actions .btn { flex: 1; justify-content: center; }
+
+/* 一覧ビュー（リスト形式） */
+.hotel-list-item {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  transition: box-shadow var(--trans);
+}
+.hotel-list-item:hover { box-shadow: 0 6px 24px rgba(6,90,130,.18); }
+.hotel-list-item .hli-img {
+  width: 200px; min-width: 200px; height: 150px;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--white); font-size: 48px;
+  flex-shrink: 0;
+}
+.hotel-list-item .hli-body {
+  flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.hotel-list-item .hli-name { font-size: 17px; font-weight: 700; }
+.hotel-list-item .hli-actions {
+  padding: 14px 16px; display: flex; flex-direction: column;
+  gap: 8px; justify-content: center; align-items: center;
+  border-left: 1px solid var(--gray-lt); min-width: 160px;
+}
+
+/* ── フィルター / ソート ── */
+.filter-bar {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 20px;
+}
+.filter-bar select, .filter-bar input {
+  padding: 6px 10px; border: 1px solid var(--gray-bd);
+  border-radius: 6px; font-size: 13px; color: var(--text);
+}
+.filter-bar label { font-size: 13px; color: var(--gray); white-space: nowrap; }
+.filter-bar .result-count { margin-left: auto; font-size: 13px; color: var(--gray); }
+
+/* ── 地域タブ ── */
+.region-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.region-tab {
+  padding: 8px 18px; border-radius: 20px; border: 2px solid var(--gray-bd);
+  background: var(--white); color: var(--gray); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--trans);
+}
+.region-tab:hover { border-color: var(--primary); color: var(--primary); }
+.region-tab.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+/* ── グリッドレイアウト ── */
+.hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.hotel-list { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── ローディング ── */
+.loading-spinner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 32px;
+  color: var(--primary); font-size: 15px;
+}
+.spinner {
+  width: 28px; height: 28px; border: 3px solid var(--gray-bd);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.load-more-sentinel { height: 4px; }
+
+/* ── フォーム ── */
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 13px; font-weight: 600; color: var(--text); }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 9px 12px; border: 1.5px solid var(--gray-bd);
+  border-radius: 6px; font-size: 14px; color: var(--text);
+  background: var(--white); transition: var(--trans);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--primary); outline: none;
+  box-shadow: 0 0 0 3px rgba(6,90,130,.12);
+}
+.form-group .hint { font-size: 11px; color: var(--gray); }
+.form-group .error-msg { font-size: 11px; color: var(--danger); display: none; }
+.form-group.has-error input, .form-group.has-error select { border-color: var(--danger); }
+.form-group.has-error .error-msg { display: block; }
+
+.form-section { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+.form-section h3 { font-size: 16px; color: var(--accent); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--light-bg); }
+
+/* ── アラート ── */
+.alert { padding: 12px 16px; border-radius: 6px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 8px; }
+.alert-warn { background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; }
+.alert-info { background: var(--light-bg); border: 1px solid var(--primary); color: var(--primary); }
+.alert-success { background: #ECFDF5; border: 1px solid var(--success); color: #065F46; }
+.alert-danger { background: #FEF2F2; border: 1px solid var(--danger); color: #991B1B; }
+
+/* ── バッジ ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-primary { background: var(--light-bg); color: var(--primary); }
+.badge-success { background: #ECFDF5; color: var(--success); }
+.badge-warn { background: #FEF3C7; color: var(--warn); }
+.badge-danger { background: #FEF2F2; color: var(--danger); }
+.badge-gray { background: var(--gray-lt); color: var(--gray); }
+
+/* ── 空き状況グリッド ── */
+.availability-grid { overflow-x: auto; }
+.avail-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.avail-table th, .avail-table td { border: 1px solid var(--gray-bd); text-align: center; padding: 6px 4px; }
+.avail-table th { background: var(--accent); color: var(--white); font-size: 11px; }
+.avail-table td { white-space: nowrap; }
+.avail-ok { background: #D1FAE5; color: #065F46; font-weight: 700; }
+.avail-ng { background: #FEE2E2; color: #991B1B; font-weight: 700; }
+
+/* ── モーダル ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-box {
+  background: var(--white); border-radius: 12px; padding: 28px;
+  max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  position: relative; animation: modalIn .25s ease;
+}
+@keyframes modalIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+.modal-title { font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 16px; }
+
+/* ── 予約フローステップバー ── */
+.step-bar { display: flex; gap: 0; margin-bottom: 28px; }
+.step-item {
+  flex: 1; padding: 12px 10px; text-align: center; font-size: 13px; font-weight: 600;
+  background: var(--gray-lt); color: var(--gray); border: 1px solid var(--gray-bd);
+  position: relative;
+}
+.step-item:not(:last-child)::after {
+  content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 20px solid transparent; border-bottom: 20px solid transparent;
+  border-left: 14px solid var(--white); z-index: 1;
+}
+.step-item.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+.step-item.done { background: var(--success); color: var(--white); border-color: var(--success); }
+
+/* ── 予約確認テーブル ── */
+.confirm-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.confirm-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-lt); }
+.confirm-table td:first-child { width: 38%; color: var(--gray); font-size: 13px; }
+.confirm-table tr:last-child td { font-weight: 700; color: var(--primary); font-size: 16px; border-bottom: none; }
+
+/* ── 予約番号ボックス ── */
+.booking-no-box {
+  background: var(--light-bg); border: 2px solid var(--primary);
+  border-radius: var(--radius); padding: 20px; text-align: center; margin: 24px 0;
+}
+.booking-no-box .label { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
+.booking-no-box .number { font-size: 28px; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
+
+/* ── 予約履歴テーブル ── */
+.bookings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bookings-table th { background: var(--accent); color: var(--white); padding: 10px 12px; text-align: left; font-size: 12px; }
+.bookings-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-lt); }
+.bookings-table tr:hover td { background: var(--gray-lt); }
+.bookings-table .hotel-link { color: var(--primary); font-weight: 600; cursor: pointer; }
+.bookings-table .hotel-link:hover { text-decoration: underline; }
+
+/* ── フッター ── */
+.site-footer {
+  background: var(--accent); color: rgba(255,255,255,.7);
+  padding: 32px 20px; margin-top: 60px; text-align: center; font-size: 12px;
+}
+.site-footer a { color: rgba(255,255,255,.7); }
+.site-footer .footer-nav { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.disclaimer-footer {
+  margin-top: 12px; padding: 10px 20px;
+  background: rgba(255,255,255,.08); border-radius: 6px;
+  font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.7;
+}
+
+/* ── パンくず ── */
+.breadcrumb { font-size: 12px; color: var(--gray); margin-bottom: 16px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.breadcrumb a { color: var(--primary); }
+.breadcrumb .sep { color: var(--gray-bd); }
+
+/* ── セクションタイトル ── */
+.section-title { font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary); }
+.section-title.sm { font-size: 17px; margin-bottom: 14px; }
+
+/* ── ページタイトル ── */
+.page-title { font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.page-subtitle { font-size: 14px; color: var(--gray); margin-bottom: 24px; }
+
+/* ── ファシリティタグ ── */
+.facility-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.facility-tag { background: var(--light-bg); color: var(--primary); border: 1px solid var(--gray-bd); border-radius: 4px; padding: 2px 8px; font-size: 12px; }
+
+/* ── トースト通知 ── */
+#toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.2); animation: toastIn .3s ease; max-width: 320px; }
+.toast-success { background: var(--success); color: var(--white); }
+.toast-error { background: var(--danger); color: var(--white); }
+.toast-info { background: var(--primary); color: var(--white); }
+@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ── レスポンシブ ── */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 24px; }
+  .search-box { flex-direction: column; }
+  .header-search { display: none; }
+  .hotel-grid { grid-template-columns: 1fr; }
+  .hotel-list-item .hli-img { width: 120px; min-width: 120px; height: 120px; }
+  .hotel-list-item .hli-actions { min-width: 130px; }
+  .bookings-table { font-size: 11px; }
+  .bookings-table td, .bookings-table th { padding: 7px 6px; }
+}
+
+/* ── ユーティリティ ── */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.d-flex { display: flex; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.hidden { display: none !important; }
+.divider { border: none; border-top: 1px solid var(--gray-lt); margin: 20px 0; }

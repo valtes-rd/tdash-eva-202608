@@ -1,0 +1,67 @@
+// ============================================================
+//  TravelNest Demo – Shared Layout Builder
+// ============================================================
+
+function buildDisclaimer() {
+  return `
+<div class="disclaimer-banner">
+  ⚠️ <strong>デモサイト：</strong>
+  このサイトはデモンストレーション目的で作成された架空のサービスです。
+  掲載されているホテル・料金・予約情報はすべてフィクションです。実際の予約・決済は行われません。
+</div>`;
+}
+
+function buildHeader(activePage = "") {
+  const helpLink = "help.html";
+  return `
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="plane">✈</span> TravelNest
+    </a>
+    <div class="header-search">
+      <input type="text" id="hs-keyword" placeholder="目的地・ホテル名" onkeydown="if(event.key==='Enter')headerSearch()">
+      <button onclick="headerSearch()" title="検索">🔍</button>
+    </div>
+    <nav class="header-nav" style="display:flex;align-items:center;gap:4px;">
+      <a href="${helpLink}" class="header-nav">ヘルプ</a>
+      <span id="header-nav-dynamic" style="display:flex;align-items:center;gap:4px;"></span>
+    </nav>
+  </div>
+</header>`;
+}
+
+function buildFooter() {
+  return `
+<footer class="site-footer">
+  <div class="footer-nav">
+    <a href="index.html">ホーム</a>
+    <a href="search.html">ホテル検索</a>
+    <a href="mypage.html">マイページ</a>
+    <a href="help.html">ヘルプ</a>
+  </div>
+  <div>© 2025 TravelNest Demo – Valtes Inc.</div>
+  <div class="disclaimer-footer">
+    【免責事項】本サイトはデモンストレーション目的で作成された架空のサービスです。
+    掲載されているホテル名・料金・写真・レビュー・予約情報はすべて架空のフィクションであり、
+    実在のホテルや企業とは一切関係ありません。本サイト上での予約・決済・個人情報の送受信は
+    行われず、いかなる法的拘束力も生じません。本デモは株式会社バルテスの内部デモ用途のみに
+    使用されます。
+  </div>
+</footer>
+<div id="toast-container"></div>`;
+}
+
+function headerSearch() {
+  const kw = document.getElementById("hs-keyword")?.value.trim() || "";
+  const sp = App.loadSearchParams();
+  sp.keyword = kw;
+  App.saveSearchParams(sp);
+  window.location.href = "search.html";
+}
+
+function buildPage({ title, body, scripts = [], activePage = "" }) {
+  document.title = title ? `${title} | TravelNest Demo` : "TravelNest Demo";
+  document.body.insertAdjacentHTML("afterbegin", buildDisclaimer() + buildHeader(activePage));
+  document.body.insertAdjacentHTML("beforeend", buildFooter());
+}

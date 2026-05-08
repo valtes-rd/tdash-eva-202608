@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ホテル検索 | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px">
+    <div class="page-title">🔍 ホテル検索</div>
+    <div class="page-subtitle">ゲスト（未ログイン）でも検索・詳細閲覧ができます</div>
+
+    <!-- 検索フォーム -->
+    <div class="card" style="padding:20px;margin-bottom:20px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-group flex-1" style="min-width:130px">
+          <label>エリア</label>
+          <select id="f-region"><option value="all">すべてのエリア</option></select>
+        </div>
+        <div class="form-group" style="min-width:140px">
+          <label>チェックイン</label>
+          <input type="date" id="f-checkin">
+        </div>
+        <div class="form-group" style="min-width:140px">
+          <label>チェックアウト</label>
+          <input type="date" id="f-checkout">
+        </div>
+        <div class="form-group" style="max-width:90px">
+          <label>人数</label>
+          <select id="f-guests">
+            <option value="1">1名</option>
+            <option value="2" selected>2名</option>
+            <option value="3">3名</option>
+            <option value="4">4名</option>
+          </select>
+        </div>
+        <div class="form-group flex-1" style="min-width:160px">
+          <label>キーワード</label>
+          <input type="text" id="f-keyword" placeholder="ホテル名・施設など">
+        </div>
+        <button class="btn btn-primary" onclick="doSearch()">🔍 検索</button>
+      </div>
+      <div id="date-warn" class="alert alert-warn hidden" style="margin-top:10px;margin-bottom:0">
+        ⚠️ チェックインは予約日の翌日以降のみ選択できます
+      </div>
+    </div>
+
+    <!-- フィルター・ソートバー -->
+    <div class="filter-bar">
+      <label>絞り込み：</label>
+      <select id="filt-stars" onchange="applyFilters()">
+        <option value="0">★すべて</option>
+        <option value="5">★5</option>
+        <option value="4">★4以上</option>
+        <option value="3">★3以上</option>
+      </select>
+      <select id="filt-price" onchange="applyFilters()">
+        <option value="0">料金：すべて</option>
+        <option value="10000">〜¥10,000</option>
+        <option value="20000">〜¥20,000</option>
+        <option value="50000">〜¥50,000</option>
+      </select>
+      <select id="filt-facility" onchange="applyFilters()">
+        <option value="">施設：すべて</option>
+        <option value="WiFi">WiFi</option>
+        <option value="朝食">朝食</option>
+        <option value="プール">プール</option>
+        <option value="スパ">スパ</option>
+        <option value="駐車場">駐車場</option>
+        <option value="温泉">温泉・大浴場</option>
+      </select>
+      <select id="filt-sort" onchange="applyFilters()">
+        <option value="recommend">おすすめ順</option>
+        <option value="price_asc">料金：安い順</option>
+        <option value="price_desc">料金：高い順</option>
+        <option value="stars_desc">評価：高い順</option>
+      </select>
+      <label style="margin-left:auto">
+        <select id="view-mode" onchange="switchView(this.value)">
+          <option value="grid">🔲 グリッド</option>
+          <option value="list">📋 リスト</option>
+        </select>
+      </label>
+      <span class="result-count" id="result-count"></span>
+    </div>
+
+    <!-- 地域タブ -->
+    <div class="region-tabs" id="region-tabs"></div>
+
+    <!-- 検索結果 -->
+    <div id="hotel-results"></div>
+    <div id="loading-sentinel" class="load-more-sentinel"></div>
+    <div id="loading-indicator" class="loading-spinner hidden">
+      <div class="spinner"></div><span>次の5件を読み込んでいます…</span>
+    </div>
+    <div id="no-more" class="text-center" style="padding:20px;color:var(--gray);font-size:13px;display:none;">
+      ─ 以上で全件表示しました ─
+    </div>
+  </div>
+
+  <script>
+    const PAGE_SIZE = 5;
+    let allResults = [];
+    let filteredResults = [];
+    let displayedCount = 0;
+    let isLoading = false;
+    let currentView = "grid";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "ホテル検索", activePage: "search" });
+      initForm();
+      buildRegionTabs();
+      doSearch();
+      initInfiniteScroll();
+    });
+
+    function initForm() {
+      const sp = App.loadSearchParams();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      REGIONS.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id; opt.textContent = r.emoji + " " + r.name;
+        document.getElementById("f-region").appendChild(opt);
+      });
+
+      document.getElementById("f-region").value  = sp.region  || "all";
+      document.getElementById("f-checkin").value = sp.checkin || "";
+      document.getElementById("f-checkout").value= sp.checkout|| "";
+      document.getElementById("f-guests").value  = sp.guests  || "2";
+      document.getElementById("f-keyword").value = sp.keyword || "";
+      document.getElementById("f-checkin").min   = App.fmtDate(tomorrow);
+
+      // 日程バリデーション
+      document.getElementById("f-checkin").addEventListener("change", () => {
+        const ci = new Date(document.getElementById("f-checkin").value);
+        const warn = document.getElementById("date-warn");
+        if (ci <= tomorrow) { warn.classList.remove("hidden"); }
+        else { warn.classList.add("hidden"); }
+      });
+    }
+
+    function buildRegionTabs() {
+      const tabs = document.getElementById("region-tabs");
+      const sp = App.loadSearchParams();
+
+      const allTab = document.createElement("button");
+      allTab.className = "region-tab" + ((!sp.region || sp.region === "all") ? " active" : "");
+      allTab.textContent = "🌏 すべて";
+      allTab.onclick = () => selectRegionTab("all", allTab);
+      tabs.appendChild(allTab);
+
+      REGIONS.forEach(r => {
+        const tab = document.createElement("button");
+        tab.className = "region-tab" + (sp.region === r.id ? " active" : "");
+        tab.textContent = r.emoji + " " + r.name;
+        tab.dataset.region = r.id;
+        tab.onclick = () => selectRegionTab(r.id, tab);
+        tabs.appendChild(tab);
+      });
+    }
+
+    function selectRegionTab(regionId, el) {
+      document.querySelectorAll(".region-tab").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+      document.getElementById("f-region").value = regionId;
+      doSearch();
+    }
+
+    function doSearch() {
+      const region   = document.getElementById("f-region").value;
+      const checkin  = document.getElementById("f-checkin").value;
+      const checkout = document.getElementById("f-checkout").value;
+      const guests   = document.getElementById("f-guests").value;
+      const keyword  = document.getElementById("f-keyword").value.trim();
+
+      App.saveSearchParams({ region, checkin, checkout, guests, keyword });
+
+      allResults = App.searchHotels({ region, checkin, checkout, guests: +guests, keyword });
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const stars    = +document.getElementById("filt-stars").value;
+      const price    = +document.getElementById("filt-price").value;
+      const facility = document.getElementById("filt-facility").value;
+      const sort     = document.getElementById("filt-sort").value;
+
+      filteredResults = allResults.filter(h => {
+        if (stars > 0 && h.stars < stars) return false;
+        if (price > 0 && h.priceBase > price) return false;
+        if (facility && !h.facilities.some(f => f.includes(facility))) return false;
+        return true;
+      });
+
+      // ソート
+      if (sort === "price_asc")   filteredResults.sort((a,b) => a.priceBase - b.priceBase);
+      if (sort === "price_desc")  filteredResults.sort((a,b) => b.priceBase - a.priceBase);
+      if (sort === "stars_desc")  filteredResults.sort((a,b) => b.stars - a.stars);
+      if (sort === "recommend")   filteredResults.sort((a,b) => b.stars - a.stars || a.priceBase - b.priceBase);
+
+      document.getElementById("result-count").textContent = `${filteredResults.length}件`;
+      displayedCount = 0;
+      document.getElementById("hotel-results").innerHTML = "";
+      document.getElementById("no-more").style.display = "none";
+      loadMore();
+    }
+
+    function switchView(mode) {
+      currentView = mode;
+      document.getElementById("hotel-results").innerHTML = "";
+      displayedCount = 0;
+      document.getElementById("no-more").style.display = "none";
+      loadMore();
+    }
+
+    function loadMore() {
+      if (isLoading) return;
+      const remaining = filteredResults.slice(displayedCount, displayedCount + PAGE_SIZE);
+      if (remaining.length === 0) {
+        if (displayedCount > 0) document.getElementById("no-more").style.display = "block";
+        return;
+      }
+      isLoading = true;
+      document.getElementById("loading-indicator").classList.remove("hidden");
+
+      setTimeout(() => { // 非同期ローディング演出
+        const container = document.getElementById("hotel-results");
+        if (displayedCount === 0 && currentView === "grid") {
+          container.className = "hotel-grid";
+        } else if (displayedCount === 0) {
+          container.className = "hotel-list";
+        }
+
+        remaining.forEach(h => {
+          if (currentView === "grid") {
+            container.appendChild(createGridCard(h));
+          } else {
+            container.appendChild(createListItem(h));
+          }
+        });
+
+        displayedCount += remaining.length;
+        isLoading = false;
+        document.getElementById("loading-indicator").classList.add("hidden");
+
+        if (displayedCount >= filteredResults.length) {
+          document.getElementById("no-more").style.display = "block";
+        }
+      }, 300 + Math.random() * 200);
+    }
+
+    function initInfiniteScroll() {
+      const sentinel = document.getElementById("loading-sentinel");
+      const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && !isLoading) {
+          if (displayedCount < filteredResults.length) loadMore();
+        }
+      }, { threshold: 0.1 });
+      observer.observe(sentinel);
+    }
+
+    function createGridCard(h) {
+      const region = App.getRegionById(h.region);
+      const div = document.createElement("div");
+      div.className = "hotel-card";
+      div.innerHTML = `
+        <div class="hotel-card-img" style="background:${App.hotelBgColor(h.region)};font-size:42px">
+          ${region?.emoji || "🏨"}
+          ${h.name.includes("バルテス") ? `<span class="tag-ribbon">バルテス</span>` : ""}
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-card-name">${h.name}</div>
+          <div class="hotel-card-region">📍 ${App.regionName(h.region)}</div>
+          <div class="hotel-stars" style="font-size:12px">${App.starsHtml(h.stars)}</div>
+          <div class="facility-tags" style="margin:4px 0">
+            ${h.facilities.slice(0,3).map(f=>`<span class="facility-tag">${f}</span>`).join("")}
+          </div>
+          <p style="font-size:11px;color:var(--gray);flex:1;line-clamp:2;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden">${h.desc}</p>
+          <div class="hotel-card-price" style="margin-top:8px">${App.fmtPrice(h.priceBase)}<span>/泊〜</span></div>
+        </div>
+        <div class="hotel-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="window.open('hotel.html?id=${h.id}','_blank')">詳細 ↗</button>
+          <button class="btn btn-primary btn-sm" onclick="handleBook('${h.id}')">予 約</button>
+        </div>`;
+      return div;
+    }
+
+    function createListItem(h) {
+      const region = App.getRegionById(h.region);
+      const sp = App.loadSearchParams();
+      const hasDate = sp.checkin && sp.checkout;
+      const div = document.createElement("div");
+      div.className = "hotel-list-item";
+      div.innerHTML = `
+        <div class="hli-img" style="background:${App.hotelBgColor(h.region)};font-size:44px">
+          ${region?.emoji || "🏨"}
+        </div>
+        <div class="hli-body">
+          <div class="hli-name">${h.name}
+            ${h.name.includes("バルテス") ? `<span class="badge badge-primary" style="margin-left:6px;font-size:10px">バルテス</span>` : ""}
+          </div>
+          <div style="font-size:12px;color:var(--gray)">📍 ${App.regionName(h.region)}</div>
+          <div class="hotel-stars" style="font-size:12px;margin:3px 0">${App.starsHtml(h.stars)}</div>
+          <p style="font-size:13px;color:var(--gray);margin:4px 0">${h.desc}</p>
+          <div class="facility-tags">
+            ${h.facilities.map(f=>`<span class="facility-tag">${f}</span>`).join("")}
+          </div>
+        </div>
+        <div class="hli-actions">
+          <div style="font-size:20px;font-weight:700;color:var(--primary)">${App.fmtPrice(h.priceBase)}<span style="font-size:11px;font-weight:400;color:var(--gray)">/泊〜</span></div>
+          <button class="btn btn-secondary btn-sm" style="width:100%" onclick="window.open('hotel.html?id=${h.id}','_blank')">詳細を見る ↗</button>
+          <button class="btn btn-primary btn-sm" style="width:100%" onclick="handleBook('${h.id}')">予　約</button>
+          <div style="font-size:10px;color:var(--gray);text-align:center">${hasDate ? "日程確認→予約入力" : "日程選択→予約入力"}</div>
+        </div>`;
+      return div;
+    }
+
+    function handleBook(hotelId) {
+      if (!App.requireLogin()) return;
+      const sp = App.loadSearchParams();
+      sp.hotelId = hotelId;
+      App.saveSearchParams(sp);
+      const hasDate = sp.checkin && sp.checkout;
+      if (hasDate) {
+        window.location.href = "booking.html";
+      } else {
+        window.location.href = `date-select.html?hotelId=${hotelId}`;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ヘルプ | TravelNest Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .faq-item { border: 1px solid var(--gray-bd); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .faq-q { padding: 14px 18px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: white; transition: .2s; }
+    .faq-q:hover { background: var(--light-bg); }
+    .faq-a { padding: 14px 18px; background: var(--gray-lt); font-size: 14px; color: var(--gray); line-height: 1.7; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-q { background: var(--light-bg); color: var(--primary); }
+  </style>
+</head>
+<body>
+  <script src="data/master.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+
+  <div class="page-wrap" style="margin-top:80px;max-width:860px">
+    <div class="page-title">ヘルプ・よくある質問</div>
+    <div class="page-subtitle">TravelNest デモサイトの使い方・テスト方法をご案内します</div>
+
+    <!-- デモサイト説明 -->
+    <div class="alert alert-warn" style="margin-bottom:28px;font-size:14px">
+      <div>
+        ⚠️ <strong>デモサイトについて</strong><br>
+        本サイトは株式会社バルテスのシステムテスト・デモ目的で作成された<strong>架空のトラベル予約サービス</strong>です。
+        掲載されているホテル情報・料金・予約内容はすべてフィクションであり、
+        実際の予約・決済・個人情報の登録は行われません。
+      </div>
+    </div>
+
+    <!-- テストアカウント -->
+    <div class="card" style="margin-bottom:28px">
+      <div style="background:var(--primary);color:white;padding:16px 20px;border-radius:8px 8px 0 0">
+        <h2 style="font-size:18px;margin:0" id="accounts">🧪 テストアカウント一覧</h2>
+      </div>
+      <div style="padding:20px;overflow-x:auto">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">
+          以下のアカウントでログインして、予約・キャンセル・お気に入り等の機能をお試しいただけます。
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:600px">
+          <thead>
+            <tr>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:left">名前</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:left">メールアドレス</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:left">パスワード</th>
+              <th style="background:var(--accent);color:white;padding:10px 12px;text-align:left">特徴</th>
+            </tr>
+          </thead>
+          <tbody id="account-table"></tbody>
+        </table>
+        <div style="margin-top:14px;text-align:right">
+          <a href="login.html" class="btn btn-primary btn-sm">ログイン画面へ →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- バルテスホテル情報 -->
+    <div class="card" style="margin-bottom:28px">
+      <div style="background:var(--accent);color:white;padding:16px 20px;border-radius:8px 8px 0 0">
+        <h2 style="font-size:18px;margin:0">🏨 バルテスシリーズホテル（テストデータ）</h2>
+      </div>
+      <div style="padding:20px;overflow-x:auto">
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">
+          各拠点に「バルテス」ブランドのホテルが用意されています。それぞれ特定の曜日が満室状態です。空き状況テストにご活用ください。
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:500px">
+          <thead>
+            <tr>
+              <th style="background:var(--success);color:white;padding:10px 12px;text-align:left">ホテル名</th>
+              <th style="background:var(--success);color:white;padding:10px 12px;text-align:center">エリア</th>
+              <th style="background:var(--success);color:white;padding:10px 12px;text-align:center">満席の曜日</th>
+            </tr>
+          </thead>
+          <tbody id="valtes-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <h2 class="section-title sm" style="margin-bottom:16px">よくある質問</h2>
+    <div id="faq-list"></div>
+
+    <!-- 機能一覧 -->
+    <div class="card" style="margin-top:28px;padding:24px">
+      <h2 style="font-size:18px;color:var(--accent);margin-bottom:16px">📋 実装済み機能一覧</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+        ${[
+          ["🔍","ホテル検索（ゲスト可）","目的地・日程・人数・キーワード"],
+          ["♾️","無限スクロール","5件ずつ非同期ロード"],
+          ["🏨","ホテル詳細（別ウィンドウ）","写真・施設・先2週間の空き状況"],
+          ["📅","日程選択/空き確認","日程未指定時の中間画面"],
+          ["🛒","一覧から直接予約","検索結果から予約ボタン"],
+          ["✅","予約フロー（3ステップ）","入力→確認→完了"],
+          ["❤️","お気に入り登録","ホテルの保存・一覧表示"],
+          ["📋","予約履歴・キャンセル","マイページで管理"],
+          ["🔐","ログイン/会員登録","セッション管理"],
+          ["📱","レスポンシブ対応","スマートフォン対応"],
+          ["⚠️","免責表示","デモサイト表示"],
+          ["🔄","データ永続化","LocalStorage使用"],
+        ].map(([icon, title, desc]) => `
+          <div style="display:flex;gap:10px;padding:10px;background:var(--gray-lt);border-radius:6px">
+            <span style="font-size:20px">${icon}</span>
+            <div><div style="font-size:13px;font-weight:600">${title}</div><div style="font-size:11px;color:var(--gray)">${desc}</div></div>
+          </div>`).join("")}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      buildPage({ title: "ヘルプ" });
+      buildAccountTable();
+      buildValtesTable();
+      buildFAQ();
+      // アンカーへスクロール
+      if (window.location.hash) {
+        setTimeout(() => {
+          const el = document.getElementById(window.location.hash.slice(1));
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      }
+    });
+
+    function buildAccountTable() {
+      const tbody = document.getElementById("account-table");
+      const descriptions = [
+        "予約4件（完了3件・予約済み1件）",
+        "予約4件（完了2件・キャンセル1件・予約済み1件）",
+        "予約5件（完了4件・予約済み1件）",
+        "予約3件（完了2件・予約済み1件）",
+        "予約4件（完了2件・キャンセル1件・予約済み1件）",
+      ];
+      USERS.forEach((u, i) => {
+        const tr = document.createElement("tr");
+        tr.style.background = i % 2 === 0 ? "white" : "var(--gray-lt)";
+        tr.innerHTML = `
+          <td style="padding:10px 12px;font-weight:600">${u.name}</td>
+          <td style="padding:10px 12px">${u.email}</td>
+          <td style="padding:10px 12px">
+            <code style="background:var(--accent);color:white;padding:2px 8px;border-radius:4px;font-size:12px">${u.password}</code>
+          </td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--gray)">${descriptions[i] || ""}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buildValtesTable() {
+      const DOW = ["日","月","火","水","木","金","土"];
+      const valtesHotels = HOTELS.filter(h => h.name.includes("バルテス"));
+      const tbody = document.getElementById("valtes-table");
+      valtesHotels.forEach((h, i) => {
+        let soldOutDays = [];
+        try { soldOutDays = JSON.parse(h.soldOutDays.toString()); } catch(e) {}
+        const region = App.getRegionById(h.region);
+        const tr = document.createElement("tr");
+        tr.style.background = i % 2 === 0 ? "white" : "var(--gray-lt)";
+        tr.innerHTML = `
+          <td style="padding:10px 12px;font-weight:600">
+            <span onclick="window.open('hotel.html?id=${h.id}','_blank')" style="cursor:pointer;color:var(--primary)">${h.name}</span>
+          </td>
+          <td style="padding:10px 12px;text-align:center">${region?.emoji || ""} ${App.regionName(h.region)}</td>
+          <td style="padding:10px 12px;text-align:center">
+            ${soldOutDays.map(d => `<span class="badge badge-danger" style="margin:2px">${DOW[d]}曜</span>`).join("")}
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buildFAQ() {
+      const faqs = [
+        { q: "デモサイトとは何ですか？", a: "本サイトは株式会社バルテスが開発したシステムテスト・デモンストレーション用の架空のトラベル予約サービスです。実際の予約・決済・個人情報収集は一切行われません。" },
+        { q: "予約した内容はどこに保存されますか？", a: "予約データはブラウザのLocalStorageに保存されます。ブラウザのデータをクリアすると消えます。サーバーへの送信は行われません。" },
+        { q: "会員登録はできますか？", a: "デモサイトのため実際の会員登録はできません。テストアカウントをご利用ください。" },
+        { q: "キャンセルはいつまでできますか？", a: "チェックイン前日の23:59まで。当日以降はキャンセルできません（デモの仕様に基づきます）。" },
+        { q: "同じ期間に重複して予約できますか？", a: "同一ユーザーで日程が重なる予約はシステムが自動で検出し、エラーを表示します。" },
+        { q: "ホテルの写真はありますか？", a: "デモサイトのため実際の写真は使用していません。地域のシンボル絵文字と背景色で代替表示しています。" },
+        { q: "バルテスシリーズホテルとは？", a: "各地域に1〜3件ずつ設置されたテスト用ホテルです。特定の曜日が満席状態に設定されており、空き状況確認機能のテストにご活用いただけます。" },
+        { q: "お気に入り機能はどこですか？", a: "ホテル詳細ページ（別ウィンドウ）の左上にある「♡ お気に入り」ボタンで登録できます。ログインが必要です。登録済みのホテルはマイページの「お気に入り」タブで確認できます。" },
+        { q: "データをリセットするには？", a: "ブラウザの開発者ツール（F12）→ Application → LocalStorage → travelnest.jp の該当キーを削除してページをリロードしてください。" },
+        { q: "スマートフォンでも使えますか？", a: "レスポンシブデザインに対応しています。スマートフォンのブラウザでもご利用いただけます。" },
+      ];
+      const list = document.getElementById("faq-list");
+      faqs.forEach((f, i) => {
+        const item = document.createElement("div");
+        item.className = "faq-item";
+        item.innerHTML = `
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            <span>Q. ${f.q}</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="faq-a">A. ${f.a}</div>`;
+        list.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>
