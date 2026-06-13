@@ -57,7 +57,7 @@
         <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:24px;background:${App.hotelBgColor(h.region)};height:280px;display:flex;align-items:center;justify-content:center">
           <span style="font-size:72px;">${region?.emoji || "🏨"}</span>
           ${h.name.includes("バルテス") ? `<span style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700">★ バルテス系列ホテル</span>` : ""}
-          <button id="fav-btn" onclick="toggleFav()" style="
+          <button id="${isFav ? 'btn-fav-on' : 'btn-fav-off'}" onclick="toggleFav()" style="
             position:absolute;top:16px;left:16px;
             background:${isFav ? '#E11D48' : 'rgba(255,255,255,.2)'};
             color:white;border:2px solid rgba(255,255,255,.5);
@@ -174,7 +174,8 @@
     function toggleFav() {
       const isFav = App.toggleFavorite(currentHotel.id);
       if (isFav === false && !App.isLoggedIn()) return;
-      const btn = document.getElementById("fav-btn");
+      const btn = document.getElementById(isFav ? "btn-fav-off" : "btn-fav-on");
+      btn.id = isFav ? "btn-fav-on" : "btn-fav-off";
       btn.textContent = isFav ? "♥ 保存済み" : "♡ お気に入り";
       btn.style.background = isFav ? "#E11D48" : "rgba(255,255,255,.2)";
       App.showToast(isFav ? "お気に入りに追加しました" : "お気に入りを解除しました", isFav ? "success" : "info");
