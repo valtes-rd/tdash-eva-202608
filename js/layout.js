@@ -74,6 +74,7 @@ const Cal = (() => {
   function _outside(e) {
     const popup = document.getElementById('cal-popup');
     if (!popup) return;
+    if (!document.contains(e.target)) return; // innerHTML再描画で切り離された要素は無視
     const wrap = _id && document.getElementById(_id)?.closest('.date-input-wrap');
     if (!popup.contains(e.target) && (!wrap || !wrap.contains(e.target))) _close();
   }
